@@ -1,9 +1,15 @@
 require './compile'
 require './protocol.rb'
 
-# These are where the dsl starts
-def file_types(*args)
-  args.each do |ext|
+
+# initialize raka
+def raka(options)
+  define_method :__options do
+    OpenStruct.new options
+  end
+
+  # These are where the dsl starts
+  (options[:output_types] || [:csv]).each do |ext|
     define_method ext do
       Token.new self, [], ext
     end
@@ -33,9 +39,13 @@ class Token
     end
   end
 
-  def data_pattern
-    body = @chain[0, @chain.length - 1].reverse.map(&:to_s).join('__')
-    Regexp.new(body.empty? ? '' : (body + '\.' + @ext.to_s + '$'))
+  def input(output, ext)
+    # no input
+    return '' if @chain.length == 1
+
+    # match the body part besides the leading xxx__ and .ext, ? is for minimal match
+    pattern.match(output).to_s.gsub(/^\S+?__/, '').gsub(/\.\S+$/, '') +
+      '.' + ext.to_s
   end
 
   def pattern

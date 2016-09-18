@@ -1,11 +1,14 @@
 require './dsl.rb'
 
-file_types(:table, :csv, :png, :pdf)
+raka(
+  output_types: [:table, :csv, :png, :pdf],
+  input_types: [:table, :csv]
+)
 
 # allow_base_dirs :bw_de, :de
 
 # FIXME do not cover when the source and the target are of different types
-csv.year_timespots = shell* 'echo 41'
+table.year_timespots = shell* 'echo $@.'
 csv.year_timespots.round = shell* 'echo 42'
 
 csv.simple_building = shell* 'echo 8080'
