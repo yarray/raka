@@ -1,0 +1,35 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+*	protocol.rb	/^    def *(code)$/;"	f	class:Protocol
+Protocol	protocol.rb	/^class Protocol$/;"	c
+Psql	protocol.rb	/^class Psql < Protocol$/;"	c	inherits:Protocol
+R	protocol.rb	/^class R < Protocol$/;"	c	inherits:Protocol
+Shell	protocol.rb	/^class Shell < Protocol$/;"	c	inherits:Protocol
+Token	dsl.rb	/^class Token$/;"	c
+[]	dsl.rb	/^    def [](pattern)$/;"	f	class:Token
+[]=	dsl.rb	/^    def []=(pattern, value)$/;"	f	class:Token
+attach	protocol.rb	/^    def attach(env)$/;"	f	class:Protocol
+build	protocol.rb	/^    def build(code)$/;"	f	class:Protocol
+build	protocol.rb	/^    def build(code)$/;"	f	class:R
+build	protocol.rb	/^    def build(code)$/;"	f	class:Shell
+chain	dsl.rb	/^    attr_reader :chain$/;"	f	class:Token
+code	protocol.rb	/^    attr_accessor :code$/;"	f	class:Protocol
+code=	protocol.rb	/^    attr_accessor :code$/;"	f	class:Protocol
+compile	compile.rb	/^def compile(env, lhs, rhs)$/;"	f	class:Object
+create_tmp	protocol.rb	/^    def create_tmp(content)$/;"	f	class:Protocol
+data_pattern	dsl.rb	/^    def data_pattern$/;"	f	class:Token
+file_types	dsl.rb	/^def file_types(*args)$/;"	f	class:Object
+fulfill_args	compile.rb	/^def fulfill_args(cmd, task, named_captures)$/;"	f	class:Object
+initialize	dsl.rb	/^    def initialize(env, chain, ext)$/;"	f	class:Token
+initialize	protocol.rb	/^    def initialize(libs)$/;"	f	class:R
+initialize	protocol.rb	/^    def initialize(options)$/;"	f	class:Psql
+method_missing	dsl.rb	/^    def method_missing(sym, *args, &block)$/;"	f	class:Token
+pattern	dsl.rb	/^    def pattern$/;"	f	class:Token
+r	protocol.rb	/^def r(*args)$/;"	f	class:Object
+run	protocol.rb	/^    def run$/;"	f	class:Protocol
+run_script	protocol.rb	/^    def run_script(fname)$/;"	f	class:Psql
+run_script	protocol.rb	/^    def run_script(fname)$/;"	f	class:R
+run_script	protocol.rb	/^    def run_script(fname)$/;"	f	class:Shell
+shell	protocol.rb	/^def shell(*args)$/;"	f	class:Object
+sql	protocol.rb	/^def sql(runner)$/;"	f	class:Object
+template	dsl.rb	/^    def template$/;"	f	class:Token
