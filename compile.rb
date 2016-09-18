@@ -23,6 +23,10 @@ def compile(env, lhs, rhs)
     Hash[keys.zip(matched.captures)]
   end
 
+  unless env.instance_of?(Object)
+    throw "DSL compile error: seems not a valid env of rake with class #{env.class}"
+  end
+
   # the "rule" method is private, maybe here are better choices:
   # why "match" in the previous version work?
   env.send(:rule, lhs.pattern => [proc do |target|
