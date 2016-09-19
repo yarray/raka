@@ -3,10 +3,6 @@ require 'securerandom'
 # There are two methods to provide code to a protocol, either a string literal
 # or a ruby block.
 class Protocol
-  def attach(env)
-    @env = env
-  end
-
   def set_block(block)
     @block = block
   end
@@ -28,9 +24,11 @@ class Protocol
   end
 
   # prepare code to make protocol runnable
-  def prepare(task)
+  def prepare(env, task)
+    @env = env
     @code = yield @text if @text
     @code = yield @block.call(task) if @block
+    @task = task
   end
 
   def run
@@ -75,8 +73,12 @@ class R < Protocol
 end
 
 class Shell < Protocol
+  def initialize(base_dir = './')
+    @base_dir = base_dir
+  end
+
   def build(code)
-    ['set -e', code].join "\n"
+    ["cd #{@base_dir}", 'set -e', code].join "\n"
   end
 
   def run_script(fname)
@@ -85,12 +87,19 @@ class Shell < Protocol
 end
 
 class Psql < Protocol
+  def self.common(common_options)
+    @@common_options = common_options
+  end
+
+  # options Array like ['-U user', '-p 5432']
   def initialize(options)
-    @options = options
+    @options = options.update @@common_options
   end
 
   def run_script(fname)
-    @env.send :sh, "psql #{@options} -f #{fname}"
+    env_vars = @task.scope ? "PGOPTIONS='-c search_path=#{@task.scope},public' " : ''
+    @env.send :sh, env_vars + "psql #{@options} -f #{fname}"
+    @env.send :sh, "touch #{@task.name}"
   end
 end
 
@@ -107,3 +116,25 @@ def creator(name, klass)
 end
 
 creator :shell, Shell
+creator :sql, Psql
+creator :r, R
+
+# A special "Protocol" for ease of SQL file invoking
+class PsqlFile
+  def initialize(options, script_file, &block)
+    @options = options
+    @block = block
+    @script_file = script_file
+  end
+
+  def prepare(env, task)
+    @args = block.call @task
+
+    @runner = Psql.new(options + @args.map { |k, v| "-v #{k}='#{v}'" })
+    @runner.prepare env, task
+  end
+
+  def run
+    @runner.run_script @script_file
+  end
+end

@@ -1,11 +1,11 @@
-require './dsl.rb'
+require '../dsl.rb'
 
 dsl = DSL.new(self,
   output_types: [:table, :csv, :png, :pdf],
   input_types: [:table, :csv])
 
-table.year_timespots = shell* 'echo $@.'
-csv.year_timespots.round = shell* 'echo 42'
+table.year_timespots = shell* 'echo $@'
+csv.year_timespots.round = shell('~')* 'echo $PWD'
 
 dsl.scopes :bw_de, :de
 

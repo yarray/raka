@@ -1,6 +1,6 @@
-require './compile'
-require './protocol'
-require './token'
+require_relative './compile'
+require_relative './protocol'
+require_relative './token'
 
 # initialize raka
 class DSL

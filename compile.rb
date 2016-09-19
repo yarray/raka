@@ -1,4 +1,4 @@
-require './token'
+require_relative './token'
 
 class DSLCompiler
   # keep env as running environment of rake since we want to inject rules
@@ -50,10 +50,8 @@ class DSLCompiler
       # main data source and extra dependencies
       (input.to_s.empty? ? [] : [input.to_s]) + extra_deps
     end]) do |task|
-      action.attach @env
-
       # prepare text or block depending on the condition of action
-      action.prepare dsl_task(task) do |code|
+      action.prepare @env, dsl_task(task) do |code|
          fulfill_args code, dsl_task(task), captures(pattern, task.name)
       end
       action.run
