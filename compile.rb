@@ -53,11 +53,14 @@ class DSLCompiler
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
       get_input = proc { |output| lhs.input(output, ext) }
+      get_input_unscoped = proc { |output| lhs.input(output, ext, false) }
       get_extra_deps = proc do |captures_hash|
         templates.map { |templ| templ.to_s % captures_hash }
       end
 
+      # We find auto source from both THE scope and the root
       create_rule lhs.pattern, get_input, get_extra_deps, action
+      create_rule lhs.pattern, get_input_unscoped, get_extra_deps, action
     end
   end
 end

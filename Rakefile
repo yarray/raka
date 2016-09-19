@@ -2,18 +2,17 @@ require './dsl.rb'
 
 dsl = DSL.new(self,
   output_types: [:table, :csv, :png, :pdf],
-  input_types: [:table, :csv]
-)
-
-dsl.scopes :bw_de, :de
+  input_types: [:table, :csv])
 
 table.year_timespots = shell* 'echo $@.'
 csv.year_timespots.round = shell* 'echo 42'
 
+dsl.scopes :bw_de, :de
+
 csv.simple_building = shell* 'echo 8080'
 csv.simple_building.year = shell* 'echo 8081'
 
-csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(   
+csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
     echo %{building}
     echo %{building0}
 )

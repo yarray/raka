@@ -1,12 +1,12 @@
 # Context to preserve during the token chaining
 class Context
-	attr_reader :ext
-	attr_reader :scopes
+  attr_reader :ext
+  attr_reader :scopes
 
-	def initialize(ext, scopes = [])
-		@ext = ext
-		@scopes = scopes
-	end
+  def initialize(ext, scopes = [])
+    @ext = ext
+    @scopes = scopes
+  end
 end
 
 class Token
@@ -36,18 +36,30 @@ class Token
     end
   end
 
-  def input(output, ext)
+  def input(output, ext, scoped=true)
     # no input
     return '' if @chain.length == 1
 
-    # match the body part besides the leading xxx__ and .ext, ? is for minimal match
-    pattern.match(output).to_s.gsub(/^\S+?__/, '').gsub(/\.\S+$/, '') +
-      '.' + ext.to_s
+    # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
+    # ? is for minimal match
+    body = pattern.match(output).to_s
+    leading_pattern = /^(\S+\/)*\S+?__/
+    if scoped
+      body = body.gsub(leading_pattern, '')
+    else
+      body = body.gsub(leading_pattern, '\1')
+    end
+
+    # remove output ext and append input ext
+    body = body.gsub(/\.[^\.]+$/, '')
+    body + '.' + ext.to_s
   end
 
   def pattern
+    # scopes as leading
+    leading = @context.scopes.empty? ? '' : "(#{@context.scopes.join '|'})/"
     body = @chain.reverse.map(&:to_s).join('__')
-    Regexp.new('^' + body + '\.' + @context.ext.to_s + '$')
+    Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
 
   def template
