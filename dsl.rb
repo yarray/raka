@@ -1,6 +1,6 @@
 require './compile'
-require './protocol.rb'
-require './token.rb'
+require './protocol'
+require './token'
 
 # initialize raka
 class DSL

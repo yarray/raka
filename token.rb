@@ -12,6 +12,13 @@ end
 class Token
   attr_reader :chain
 
+  def self.parse_output(output)
+    # xxx? is for minimal match
+    info = %r{^((?<scope>\S+)/)*(?<stem>(\S+))(?<ext>\.[^\.]+)$}
+      .match(output)
+    OpenStruct.new Hash[info.names.zip(info.captures)]
+  end
+
   def initialize(compiler, context, chain)
     @compiler = compiler
     @context = context
@@ -36,23 +43,16 @@ class Token
     end
   end
 
+  # TODO no @var used, bad smell
   def input(output, ext, scoped=true)
     # no input
     return '' if @chain.length == 1
 
     # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
-    # ? is for minimal match
-    body = pattern.match(output).to_s
-    leading_pattern = /^(\S+\/)*\S+?__/
-    if scoped
-      body = body.gsub(leading_pattern, '')
-    else
-      body = body.gsub(leading_pattern, '\1')
-    end
-
-    # remove output ext and append input ext
-    body = body.gsub(/\.[^\.]+$/, '')
-    body + '.' + ext.to_s
+    info = Token.parse_output(output)
+    input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
+    scoped && info.scope ?
+      "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"
   end
 
   def pattern

@@ -1,4 +1,4 @@
-require 'rake'
+require './token'
 
 class DSLCompiler
   # keep env as running environment of rake since we want to inject rules
@@ -13,7 +13,10 @@ class DSLCompiler
 
     args = Hash[(0...deps.size).zip deps].merge named_captures
     # gsub refer ith dependency as $i
+    output_info = Token.parse_output task.name
     cmd = cmd
+          .sub('$(scope)', output_info.scope || '')
+          .sub('$(stem)', output_info.stem)
           .sub('$@', task.name)
           .sub('$<', deps.join(','))
           .sub('$^', deps.first || '')

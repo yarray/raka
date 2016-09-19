@@ -15,6 +15,7 @@ csv.simple_building.year = shell* 'echo 8081'
 csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
     echo %{building}
     echo %{building0}
+    echo $(scope).$(stem)
 )
 
 # _.fact.func['percent_(\S+)'] = r %(
