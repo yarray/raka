@@ -1,11 +1,14 @@
 require 'securerandom'
-require 'rake'
 
+# There are two methods to provide code to a protocol, either a string literal
+# or a ruby block.
 class Protocol
-  attr_accessor :code
-
   def attach(env)
     @env = env
+  end
+
+  def set_block(block)
+    @block = block
   end
 
   def create_tmp(content)
@@ -18,17 +21,23 @@ class Protocol
     tmpfile
   end
 
+  # for syntax sugar like shell* <code text>
+  def *(text)
+    @text = text
+    [self]
+  end
+
+  # prepare code to make protocol runnable
+  def prepare(task)
+    @code = yield @text if @text
+    @code = yield @block.call(task) if @block
+  end
+
   def run
     throw 'No code to run' if @code.nil?
 
     script_text = build(@code).gsub(/^    |\t/, '')
     run_script create_tmp(script_text)
-  end
-
-  # for syntax sugar like shell* <code>
-  def *(code)
-    @code = code
-    [self]
   end
 
   # template methods:
@@ -85,14 +94,16 @@ class Psql < Protocol
   end
 end
 
-def r(*args)
-  R.new(*args)
+def creator(name, klass)
+  define_method name do |*args, &block|
+    res = klass.new(*args)
+    if block
+      res.set_block(block)
+      [res]
+    else
+      res # if no block, waiting for * to add code text
+    end
+  end
 end
 
-def shell(*args)
-  Shell.new(*args)
-end
-
-def sql(runner)
-  Psql.new(*args)
-end
+creator :shell, Shell

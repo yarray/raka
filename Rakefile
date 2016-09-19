@@ -9,8 +9,10 @@ csv.year_timespots.round = shell* 'echo 42'
 
 dsl.scopes :bw_de, :de
 
-csv.simple_building = shell* 'echo 8080'
-csv.simple_building.year = shell* 'echo 8081'
+csv.simple_building = shell* 'echo $(scope) 8080'
+csv.simple_building.year = [] | shell do |t|
+    "echo #{t.scope.capitalize}"
+end
 
 csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
     echo %{building}
