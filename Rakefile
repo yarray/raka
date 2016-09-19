@@ -1,21 +1,21 @@
 require './dsl.rb'
 
-raka(
+dsl = DSL.new(self,
   output_types: [:table, :csv, :png, :pdf],
   input_types: [:table, :csv]
 )
 
-# allow_base_dirs :bw_de, :de
+dsl.scopes :bw_de, :de
 
-# FIXME do not cover when the source and the target are of different types
 table.year_timespots = shell* 'echo $@.'
 csv.year_timespots.round = shell* 'echo 42'
 
 csv.simple_building = shell* 'echo 8080'
 csv.simple_building.year = shell* 'echo 8081'
 
-csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
-    echo Hello World
+csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(   
+    echo %{building}
+    echo %{building0}
 )
 
 # _.fact.func['percent_(\S+)'] = r %(
@@ -36,4 +36,3 @@ csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%
 # task 'geom__year__simple_building' do
 #     puts 'Hello'
 # end
-

@@ -20,9 +20,8 @@ class Protocol
 
   def run
     throw 'No code to run' if @code.nil?
-    
+
     script_text = build(@code).gsub(/^    |\t/, '')
-    puts script_text
     run_script create_tmp(script_text)
   end
 
