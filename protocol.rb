@@ -104,7 +104,7 @@ class Psql < Protocol
 end
 
 def creator(name, klass)
-  define_method name do |*args, &block|
+  define_singleton_method name do |*args, &block|
     res = klass.new(*args)
     if block
       res.set_block(block)

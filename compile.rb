@@ -58,6 +58,14 @@ class DSLCompiler
     end
   end
 
+  def resolve_dep(dep, args)
+    if dep.response_to? :template
+      dep.template.to_s % args
+    else
+      dep
+    end
+  end
+
   # compile token = rhs to rake rule
   def compile(lhs, rhs)
     unless @env.instance_of?(Object)
@@ -65,14 +73,13 @@ class DSLCompiler
     end
 
     action = rhs.pop
-    templates = rhs.map(&:template)
 
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
       get_input = proc { |output| lhs.input(output, ext) }
       get_input_unscoped = proc { |output| lhs.input(output, ext, false) }
       get_extra_deps = proc do |captures_hash|
-        templates.map { |templ| templ.to_s % captures_hash }
+        rhs.map { |dep| resolve_dep(dep, captures_hash) }
       end
 
       # We find auto source from both THE scope and the root
