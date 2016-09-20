@@ -7,6 +7,10 @@ dsl = DSL.new(self,
 table.year_timespots = shell* 'echo $@'
 csv.year_timespots.round = shell('~')* 'echo $PWD'
 
+dsl.scopes :de
+
+csv.compound_building.year.geom = ['round__year_timespots.csv']
+
 dsl.scopes :bw_de, :de
 
 csv.simple_building = shell* 'echo $(scope) 8080'
@@ -14,12 +18,12 @@ csv.simple_building.year = [] | shell do |t|
     "echo #{t.scope.capitalize}"
 end
 
-csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
-    echo %{building}
-    echo %{building0}
-    echo $(scope).$(stem)
-)
-
+# csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
+#     echo %{building}
+#     echo %{building0}
+#     echo $(scope).$(stem)
+# )
+#
 # _.fact.func['percent_(\S+)'] = r %(
 #     sql_input('SELECT timespot, %{func0}/total::float FROM $^', #{RCONN_ARGS}) | csv_output($@)
 # )

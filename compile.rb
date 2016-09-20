@@ -50,6 +50,7 @@ class DSLCompiler
       # main data source and extra dependencies
       (input.to_s.empty? ? [] : [input.to_s]) + extra_deps
     end]) do |task|
+      next if !action
       # prepare text or block depending on the condition of action
       action.prepare @env, dsl_task(task) do |code|
          fulfill_args code, dsl_task(task), captures(pattern, task.name)
@@ -59,7 +60,7 @@ class DSLCompiler
   end
 
   def resolve_dep(dep, args)
-    if dep.response_to? :template
+    if dep.respond_to? :template
       dep.template.to_s % args
     else
       dep
@@ -72,7 +73,7 @@ class DSLCompiler
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
     end
 
-    action = rhs.pop
+    action = rhs.last.respond_to?(:run) ? rhs.pop : nil
 
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
