@@ -1,8 +1,15 @@
 require 'securerandom'
 
-# There are two methods to provide code to a protocol, either a string literal
-# or a ruby block.
-class Protocol
+# protocol conforms the interface:
+# 
+# run(env, task) resolve
+#
+# run :: rake's main -> dsl task(see compiler) -> void
+# resolve :: str -> str
+
+# There are two methods to provide code to a language protocol, either a string literal
+# OR a ruby block. Cannot choose both.
+class LanguageProtocol
   def set_block(block)
     @block = block
   end
@@ -23,19 +30,15 @@ class Protocol
     [self]
   end
 
-  # prepare code to make protocol runnable
-  def prepare(env, task)
-    @env = env
-    @code = yield @text if @text
-    @code = yield @block.call(task) if @block
-    @task = task
-  end
+  # a block::str -> str should be given to resolve the bindings in code text
+  def run(env, task)
+    code = yield @text if @text
+    code = yield @block.call(task) if @block
 
-  def run
-    throw 'No code to run' if @code.nil?
+    throw 'No code to run' if code.nil?
 
-    script_text = build(@code).gsub(/^    |\t/, '')
-    run_script create_tmp(script_text)
+    script_text = build(code).gsub(/^    |\t/, '')
+    run_script env, create_tmp(script_text), task
   end
 
   # template methods:
@@ -43,10 +46,10 @@ class Protocol
   def build(code)
     code
   end
-  # run_script(fname)
+  # run_script(fname, task)
 end
 
-class R < Protocol
+class R < LanguageProtocol
   def initialize(libs)
     @libs = libs
   end
@@ -67,12 +70,12 @@ class R < Protocol
     [libraries, sources, extra, code].join "\n"
   end
 
-  def run_script(fname)
-    @env.send :sh, "Rscript #{fname}"
+  def run_script(env, fname, task)
+    env.send :sh, "Rscript #{fname}"
   end
 end
 
-class Shell < Protocol
+class Shell < LanguageProtocol
   def initialize(base_dir = './')
     @base_dir = base_dir
   end
@@ -81,25 +84,22 @@ class Shell < Protocol
     ["cd #{@base_dir}", 'set -e', code].join "\n"
   end
 
-  def run_script(fname)
-    @env.send :sh, "bash #{fname}"
+  def run_script(env, fname, task)
+    env.send :sh, "bash #{fname}"
   end
 end
 
-class Psql < Protocol
-  def self.common(common_options)
-    @@common_options = common_options
+class Psql < LanguageProtocol
+  def initialize(opt_str)
+      @opt_str = opt_str
   end
 
-  # options Array like ['-U user', '-p 5432']
-  def initialize(options)
-    @options = options.update @@common_options
-  end
-
-  def run_script(fname)
-    env_vars = @task.scope ? "PGOPTIONS='-c search_path=#{@task.scope},public' " : ''
-    @env.send :sh, env_vars + "psql #{@options} -f #{fname}"
-    @env.send :sh, "touch #{@task.name}"
+  def run_script(env, fname, task)
+    env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
+    env.send :sh, env_vars +
+      "psql -h #{env.HOST} -p #{env.PORT} -U #{env.USER} -d #{env.DB}" +
+      " #{@opt_str} -f #{fname}"
+    env.send :sh, "touch #{task.name}"
   end
 end
 
@@ -119,22 +119,27 @@ creator :shell, Shell
 creator :sql, Psql
 creator :r, R
 
-# A special "Protocol" for ease of SQL file invoking
+
 class PsqlFile
-  def initialize(options, script_file, &block)
-    @options = options
-    @block = block
+  def initialize(search_path = '', script_file = '', &resolve_args)
+    @resolve_args = resolve_args
     @script_file = script_file
   end
 
-  def prepare(env, task)
-    @args = block.call @task
+  def run(env, task)
+    if @script_file.empty?
+      scope_part = task.scope ? task.scope.to_s + '/' : ''
+      search_path = search_path.empty ? env.SRC_DIR : search_path
+      # infer from the task name 
+      @script_file = "#{search_path}/#{scope_part}#{task.stem}.sql"
+    end
+    @args = @resolve_args.call @task
 
-    @runner = Psql.new(options + @args.map { |k, v| "-v #{k}='#{v}'" })
-    @runner.prepare env, task
+    @runner = Psql.new(@args.map { |k, v| "-v #{k}='#{v}'" })
+    @runner.run_script env, @script_file, task
   end
+end
 
-  def run
-    @runner.run_script @script_file
-  end
+def psqlf(*args, &block)
+    PsqlFile(*args, &block)
 end

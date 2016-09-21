@@ -42,20 +42,18 @@ class DSLCompiler
   end
 
   # build one rule
-  def create_rule(pattern, get_input, get_extra_deps, action)
+  def create_rule(pattern, get_inputs, get_extra_deps, action)
     # the "rule" method is private, maybe here are better choices
     @env.send(:rule, pattern => [proc do |target|
-      input = get_input.call target
+      inputs = get_inputs.call target
       extra_deps = get_extra_deps.call captures(pattern, target)
       # main data source and extra dependencies
-      (input.to_s.empty? ? [] : [input.to_s]) + extra_deps
+      inputs + extra_deps
     end]) do |task|
       next if !action
-      # prepare text or block depending on the condition of action
-      action.prepare @env, dsl_task(task) do |code|
-         fulfill_args code, dsl_task(task), captures(pattern, task.name)
+      action.run @env, dsl_task(task) do |code|
+        fulfill_args code, dsl_task(task), captures(pattern, task.name)
       end
-      action.run
     end
   end
 
@@ -75,17 +73,23 @@ class DSLCompiler
 
     action = rhs.last.respond_to?(:run) ? rhs.pop : nil
 
+    get_extra_deps = proc do |captures_hash|
+        rhs.map { |dep| resolve_dep(dep, captures_hash) }
+    end
+
+    if !lhs.has_inputs?
+      create_rule lhs.pattern, proc {[]}, get_extra_deps, action
+      return
+    end
+
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
-      get_input = proc { |output| lhs.input(output, ext) }
-      get_input_unscoped = proc { |output| lhs.input(output, ext, false) }
-      get_extra_deps = proc do |captures_hash|
-        rhs.map { |dep| resolve_dep(dep, captures_hash) }
-      end
+      get_inputs = proc { |output| lhs.inputs(output, ext) }
+      get_inputs_unscoped = proc { |output| lhs.inputs(output, ext, false) }
 
       # We find auto source from both THE scope and the root
-      create_rule lhs.pattern, get_input, get_extra_deps, action
-      create_rule lhs.pattern, get_input_unscoped, get_extra_deps, action
+      create_rule lhs.pattern, get_inputs, get_extra_deps, action
+      create_rule lhs.pattern, get_inputs_unscoped, get_extra_deps, action
     end
   end
 end

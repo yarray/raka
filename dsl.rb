@@ -5,9 +5,10 @@ require_relative './token'
 # initialize raka
 class DSL
   def initialize(env, options)
-    @options = options = OpenStruct.new (
-      { output_types: [:csv], input_types: [:csv], scopes: []
-    }.merge(options))
+    @env = env
+
+    defaults = { output_types: [:csv], input_types: [:csv], scopes: [] }
+    @options = options = OpenStruct.new(defaults.merge(options))
 
     # options.output_types = OutputType.parse_option(options.output_types || [:csv])
     # These are where the dsl starts
@@ -23,5 +24,12 @@ class DSL
 
   def scopes(*args)
     @options.scopes = args
+  end
+
+  def task(arg, action)
+    compiler = DSLCompiler.new(@env, @options)
+    env.task arg do |task|
+      action.run @env, compiler.dsl_task(task)
+    end
   end
 end

@@ -18,11 +18,11 @@ csv.simple_building.year = [] | shell do |t|
     "echo #{t.scope.capitalize}"
 end
 
-# csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
-#     echo %{building}
-#     echo %{building0}
-#     echo $(scope).$(stem)
-# )
+csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
+    echo %{building}
+    echo %{building0}
+    echo $(scope).$(stem)
+)
 #
 # _.fact.func['percent_(\S+)'] = r %(
 #     sql_input('SELECT timespot, %{func0}/total::float FROM $^', #{RCONN_ARGS}) | csv_output($@)
