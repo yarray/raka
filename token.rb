@@ -3,7 +3,7 @@ class Context
   attr_reader :ext
   attr_reader :scopes
 
-  def initialize(ext, scopes = [])
+  def initialize(ext, scopes=[])
     @ext = ext
     @scopes = scopes
   end

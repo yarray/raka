@@ -26,10 +26,7 @@ class DSL
     @options.scopes = args
   end
 
-  def task(arg, action)
-    compiler = DSLCompiler.new(@env, @options)
-    env.task arg do |task|
-      action.run @env, compiler.dsl_task(task)
-    end
+  def task
+      Token.new DSLCompiler.new(@env, @options), Context.new('task', @options.scopes), []
   end
 end

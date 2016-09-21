@@ -12,7 +12,7 @@ class DSLCompiler
     output_info = Token.parse_output task.name
     deps = task.prerequisites
     OpenStruct.new(
-      scope: output_info.scope || '',
+      scope: output_info.scope,
       stem: output_info.stem,
       name: task.name,
       deps: deps,
@@ -21,18 +21,18 @@ class DSLCompiler
     )
   end
 
-  def fulfill_args(cmd, task, named_captures)
+  def fulfill_args(text, task, named_captures={})
     args = Hash[(0...task.deps.size).zip task.deps].merge named_captures
 
     # gsub refer ith dependency as $i
-    cmd = cmd
-          .sub('$(scope)', task.scope || '')
-          .sub('$(stem)', task.stem)
-          .sub('$@', task.name)
-          .sub('$<', task.deps_str)
-          .sub('$^', task.dep)
-          .gsub(/\$(\d+)/, '%{\1}') % args
-    cmd % named_captures
+    text = text
+           .sub('$(scope)', task.scope || '')
+           .sub('$(stem)', task.stem)
+           .sub('$@', task.name)
+           .sub('$<', task.deps_str)
+           .sub('$^', task.dep)
+           .gsub(/\$(\d+)/, '%{\1}') % args
+    text % named_captures
   end
 
   def captures(pattern, target)

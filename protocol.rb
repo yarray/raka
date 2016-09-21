@@ -89,6 +89,7 @@ class Shell < LanguageProtocol
   end
 end
 
+# requires HOST, PORT, USER, DB
 class Psql < LanguageProtocol
   def initialize(opt_str)
       @opt_str = opt_str
@@ -97,7 +98,7 @@ class Psql < LanguageProtocol
   def run_script(env, fname, task)
     env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
     env.send :sh, env_vars +
-      "psql -h #{env.HOST} -p #{env.PORT} -U #{env.USER} -d #{env.DB}" +
+      "psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB}" +
       " #{@opt_str} -f #{fname}"
     env.send :sh, "touch #{task.name}"
   end
@@ -120,26 +121,27 @@ creator :sql, Psql
 creator :r, R
 
 
+# requires SRC_DIR and all Psql requirements
 class PsqlFile
-  def initialize(search_path = '', script_file = '', &resolve_args)
-    @resolve_args = resolve_args
-    @script_file = script_file
+  def initialize(options)
+    @options = options
   end
 
-  def run(env, task)
-    if @script_file.empty?
-      scope_part = task.scope ? task.scope.to_s + '/' : ''
-      search_path = search_path.empty ? env.SRC_DIR : search_path
+  def run(env, task, &resolve)
+    if @options.has_key? :script_file
+      script_file = resolve.call @options[:script_file]
+    else
       # infer from the task name 
-      @script_file = "#{search_path}/#{scope_part}#{task.stem}.sql"
+      script_file = "#{SRC_DIR}/#{task.stem}.sql"
     end
-    @args = @resolve_args.call @task
 
-    @runner = Psql.new(@args.map { |k, v| "-v #{k}='#{v}'" })
-    @runner.run_script env, @script_file, task
+    params = Hash[(@options[:params] || {}).each { |k, v| [k, resolve.call(v)] }]
+
+    @runner = Psql.new(params.map { |k, v| "-v #{k}='#{v}'" }.join ' ')
+    @runner.run_script env, script_file, task
   end
 end
 
 def psqlf(*args, &block)
-    PsqlFile(*args, &block)
+    [PsqlFile.new(*args, &block)]
 end
