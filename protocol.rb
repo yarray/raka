@@ -108,7 +108,7 @@ end
 class Psql < LanguageProtocol
   # Sometimes we want to use the psql command with bash directly
   def self.sh_cmd(scope)
-    env_vars = scope ? "PGOPTIONS='-c search_path=#{scope},public' " : ''
+    env_vars = "PGOPTIONS='-c search_path=#{scope ? scope + ',' : ''}public' "
     "#{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1"
   end
 
@@ -118,7 +118,7 @@ class Psql < LanguageProtocol
 
   def run_script(env, fname, task)
     bash env, %{
-    #{sh_cmd(task.scope)} #{@opt_str} -f #{fname} | tee #{fname}.log
+    #{self.class.sh_cmd(task.scope)} #{@opt_str} -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     }
   end
@@ -154,7 +154,7 @@ class PsqlFile
 
     params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
 
-    @runner = Psql.new(params.map { |k, v| "-v #{k}='#{v}'" }.join ' ')
+    @runner = Psql.new(params.map { |k, v| "-v #{k}=\"#{v}\"" }.join ' ')
     @runner.run_script env, script_file, task
   end
 end
