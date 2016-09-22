@@ -43,6 +43,14 @@ class Token
     end
   end
 
+  def _
+    attach '\\S+'
+  end
+
+  def _=(rhs)
+    @compiler.compile(attach('\\S+'), rhs)
+  end
+
   def has_inputs?
     @chain.length > 1
   end

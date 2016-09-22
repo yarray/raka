@@ -4,6 +4,16 @@ def remove_common_indent(s)
   s.gsub(/^#{s.scan(/^[ \t]+(?=\S)/).min}/, '')
 end
 
+def bash(env, cmd)
+  puts remove_common_indent(cmd)
+  env.send :sh, "bash " + create_tmp(remove_common_indent(
+    %{set -e
+      set -o pipefail
+
+      #{cmd}
+    }))
+end
+
 # protocol conforms the interface:
 #
 # run(env, task) resolve
@@ -95,21 +105,18 @@ end
 
 # requires HOST, PORT, USER, DB
 class Psql < LanguageProtocol
-  def initialize(opt_str)
-      @opt_str = opt_str
+  def initialize(opt_str='')
+    @opt_str = opt_str
   end
 
   def run_script(env, fname, task)
     env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
 
-    env.send :sh, remove_common_indent(%{
-      set -e
-
-      #{env_vars} \
-      psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1 #{@opt_str} -f #{fname} \
-        | tee #{fname}.log; test ${PIPESTATUS[0]} -eq 0
-      mv #{fname}.log #{task.name}
-    })
+    bash env, %{
+    #{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} \\
+      -v ON_ERROR_STOP=1 #{@opt_str} -f #{fname} | tee #{fname}.log
+    mv #{fname}.log #{task.name}
+    }
   end
 end
 
@@ -125,11 +132,6 @@ def creator(name, klass)
   end
 end
 
-creator :shell, Shell
-creator :sql, Psql
-creator :r, R
-
-
 # requires SRC_DIR and all Psql requirements
 class PsqlFile
   def initialize(options={})
@@ -140,7 +142,7 @@ class PsqlFile
     if @options.has_key? :script_file
       script_file = resolve.call @options[:script_file]
     elsif @options.has_key? :script_name
-      script_file = "#{SRC_DIR}/#{@options[:script_name]}"
+      script_file = "#{SRC_DIR}/#{resolve.call @options[:script_name]}"
     else
       # infer from the task name
       script_file = "#{SRC_DIR}/#{task.stem}.sql"
@@ -153,6 +155,10 @@ class PsqlFile
   end
 end
 
+creator :shell, Shell
+creator :psql, Psql
+creator :r, R
+
 def psqlf(*args, &block)
-    [PsqlFile.new(*args, &block)]
+  [PsqlFile.new(*args, &block)]
 end
