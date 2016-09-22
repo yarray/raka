@@ -25,8 +25,4 @@ class DSL
   def scopes(*args)
     @options.scopes = args
   end
-
-  def task
-      Token.new DSLCompiler.new(@env, @options), Context.new('task', @options.scopes), []
-  end
 end

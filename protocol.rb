@@ -1,7 +1,11 @@
 require 'securerandom'
 
+def remove_common_indent(s)
+  s.gsub(/^#{s.scan(/^[ \t]+(?=\S)/).min}/, '')
+end
+
 # protocol conforms the interface:
-# 
+#
 # run(env, task) resolve
 #
 # run :: rake's main -> dsl task(see compiler) -> void
@@ -37,7 +41,7 @@ class LanguageProtocol
 
     throw 'No code to run' if code.nil?
 
-    script_text = build(code).gsub(/^    |\t/, '')
+    script_text = build(remove_common_indent(code))
     run_script env, create_tmp(script_text), task
   end
 
@@ -97,10 +101,12 @@ class Psql < LanguageProtocol
 
   def run_script(env, fname, task)
     env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
-    env.send :sh, env_vars +
-      "psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB}" +
-      " #{@opt_str} -f #{fname}"
-    env.send :sh, "touch #{task.name}"
+
+    env.send :sh, "set -e\n\n" +
+      env_vars + "psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB}" +
+      " #{@opt_str} -f #{fname} -v ON_ERROR_STOP=1" +
+      " | tee #{fname}.log \n" +
+      "mv #{fname}.log #{task.name}"
   end
 end
 
@@ -123,15 +129,17 @@ creator :r, R
 
 # requires SRC_DIR and all Psql requirements
 class PsqlFile
-  def initialize(options)
+  def initialize(options={})
     @options = options
   end
 
   def run(env, task, &resolve)
     if @options.has_key? :script_file
       script_file = resolve.call @options[:script_file]
+    elsif @options.has_key? :script_name
+      script_file = "#{SRC_DIR}/#{@options[:script_name]}"
     else
-      # infer from the task name 
+      # infer from the task name
       script_file = "#{SRC_DIR}/#{task.stem}.sql"
     end
 

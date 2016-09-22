@@ -46,7 +46,9 @@ class DSLCompiler
     # the "rule" method is private, maybe here are better choices
     @env.send(:rule, pattern => [proc do |target|
       inputs = get_inputs.call target
-      extra_deps = get_extra_deps.call captures(pattern, target)
+      # TODO unify the logic of resolving bindings
+      scope = Token.parse_output(target).scope
+      extra_deps = get_extra_deps.call captures(pattern, target), scope
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
@@ -57,11 +59,11 @@ class DSLCompiler
     end
   end
 
-  def resolve_dep(dep, args)
+  def resolve_dep(dep, args, scope)
     if dep.respond_to? :template
-      dep.template.to_s % args
+      dep.template(scope).to_s % args
     else
-      dep
+      dep % args
     end
   end
 
@@ -73,8 +75,8 @@ class DSLCompiler
 
     action = rhs.last.respond_to?(:run) ? rhs.pop : nil
 
-    get_extra_deps = proc do |captures_hash|
-        rhs.map { |dep| resolve_dep(dep, captures_hash) }
+    get_extra_deps = proc do |captures_hash, scope|
+        rhs.map { |dep| resolve_dep(dep, captures_hash, scope) }
     end
 
     if !lhs.has_inputs?

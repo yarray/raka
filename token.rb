@@ -66,8 +66,8 @@ class Token
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
 
-  def template
-    @chain.reverse.join('__') + '.' + @context.ext.to_s
+  def template(scope=nil)
+    (scope ? scope + '/' : '') + @chain.reverse.join('__') + '.' + @context.ext.to_s
   end
 
   # These two methods indicate that this is a pattern token
