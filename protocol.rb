@@ -51,6 +51,7 @@ class LanguageProtocol
 
     throw 'No code to run' if code.nil?
 
+    puts code
     script_text = build(remove_common_indent(code))
     run_script env, create_tmp(script_text), task
   end
@@ -105,16 +106,19 @@ end
 
 # requires HOST, PORT, USER, DB
 class Psql < LanguageProtocol
+  # Sometimes we want to use the psql command with bash directly
+  def self.sh_cmd(scope)
+    env_vars = scope ? "PGOPTIONS='-c search_path=#{scope},public' " : ''
+    "#{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1"
+  end
+
   def initialize(opt_str='')
     @opt_str = opt_str
   end
 
   def run_script(env, fname, task)
-    env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
-
     bash env, %{
-    #{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} \\
-      -v ON_ERROR_STOP=1 #{@opt_str} -f #{fname} | tee #{fname}.log
+    #{sh_cmd(task.scope)} #{@opt_str} -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     }
   end
