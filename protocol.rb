@@ -102,11 +102,14 @@ class Psql < LanguageProtocol
   def run_script(env, fname, task)
     env_vars = task.scope ? "PGOPTIONS='-c search_path=#{task.scope},public' " : ''
 
-    env.send :sh, "set -e\n\n" +
-      env_vars + "psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB}" +
-      " #{@opt_str} -f #{fname} -v ON_ERROR_STOP=1" +
-      " | tee #{fname}.log \n" +
-      "mv #{fname}.log #{task.name}"
+    env.send :sh, remove_common_indent(%{
+      set -e
+
+      #{env_vars} \
+      psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1 #{@opt_str} -f #{fname} \
+        | tee #{fname}.log; test ${PIPESTATUS[0]} -eq 0
+      mv #{fname}.log #{task.name}
+    })
   end
 end
 
@@ -143,7 +146,7 @@ class PsqlFile
       script_file = "#{SRC_DIR}/#{task.stem}.sql"
     end
 
-    params = Hash[(@options[:params] || {}).each { |k, v| [k, resolve.call(v)] }]
+    params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
 
     @runner = Psql.new(params.map { |k, v| "-v #{k}='#{v}'" }.join ' ')
     @runner.run_script env, script_file, task
