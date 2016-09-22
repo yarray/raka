@@ -26,11 +26,11 @@ class DSLCompiler
 
     # gsub refer ith dependency as $i
     text = text
-           .sub('$(scope)', task.scope || '')
-           .sub('$(stem)', task.stem)
-           .sub('$@', task.name)
-           .sub('$<', task.deps_str)
-           .sub('$^', task.dep)
+           .gsub('$(scope)', task.scope || '')
+           .gsub('$(stem)', task.stem)
+           .gsub('$@', task.name)
+           .gsub('$<', task.deps_str)
+           .gsub('$^', task.dep)
            .gsub(/\$(\d+)/, '%{\1}') % args
     text % named_captures
   end
