@@ -88,14 +88,14 @@ class R < LanguageProtocol
     ]
 
     after = [
-      'system("touch args[2]")'
+      'system(paste("touch", args[2]))'
     ]
 
     [libraries, sources, extra, code, after].join "\n"
   end
 
   def run_script(env, fname, task)
-    env.send :sh, "Rscript #{fname} '#{task.scope || "public"}'"
+    env.send :sh, "Rscript #{fname} '#{task.scope || "public"}' '#{task.name}'"
   end
 end
 
