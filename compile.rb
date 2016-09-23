@@ -24,6 +24,7 @@ class DSLCompiler
   def fulfill_args(text, task, named_captures={})
     args = Hash[(0...task.deps.size).zip task.deps].merge named_captures
 
+    # TODO add input
     # gsub refer ith dependency as $i
     text = text
            .gsub('$(scope)', task.scope || '')
