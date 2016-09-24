@@ -1,3 +1,5 @@
+require 'rake'
+
 require_relative './token'
 
 class DSLCompiler
@@ -8,32 +10,42 @@ class DSLCompiler
   end
 
   # task is rake's task pushed into blocks
+  # offer two shapes: name only and full task to unify argument resolving
   def dsl_task(task)
-    output_info = Token.parse_output task.name
-    deps = task.prerequisites
+    if task.respond_to? :name
+      name = task.name
+      deps = task.prerequisites
+    else
+      name = task
+      deps = []
+    end
+    output_info = Token.parse_output name
     OpenStruct.new(
       scope: output_info.scope,
       stem: output_info.stem,
-      name: task.name,
+      name: name,
       deps: deps,
       deps_str: deps.join(','),
-      dep: deps.first || ''
+      dep: deps.first || '',
+      task: task
     )
   end
 
-  def fulfill_args(text, task, named_captures={})
-    args = Hash[(0...task.deps.size).zip task.deps].merge named_captures
+  def resolve(target, task, args={})
+    # convert target to text whether it is expression or already text
+    text = target.respond_to?(:template) ? target.template(task.scope).to_s : target.to_s
 
-    # TODO add input
+    # add numbered auto variables like $0, $2 referring to the first and third deps
+    args = Hash[(0...task.deps.size).zip task.deps].merge args
+
     # gsub refer ith dependency as $i
     text = text
            .gsub('$(scope)', task.scope || '')
            .gsub('$(stem)', task.stem)
            .gsub('$@', task.name)
-           .gsub('$<', task.deps_str)
-           .gsub('$^', task.dep)
+           .gsub('$^', task.deps_str)
+           .gsub('$<', task.dep) # TODO change this to input
            .gsub(/\$(\d+)/, '%{\1}') % args
-    text % named_captures
   end
 
   def captures(pattern, target)
@@ -43,28 +55,29 @@ class DSLCompiler
   end
 
   # build one rule
-  def create_rule(pattern, get_inputs, get_extra_deps, action)
+  def create_rule(pattern, get_inputs, actions, extra_deps, extra_tasks)
     # the "rule" method is private, maybe here are better choices
     @env.send(:rule, pattern => [proc do |target|
       inputs = get_inputs.call target
-      # TODO unify the logic of resolving bindings
-      scope = Token.parse_output(target).scope
-      extra_deps = get_extra_deps.call captures(pattern, target), scope
+      extra_deps = extra_deps.map do |templ|
+        resolve(templ, dsl_task(target), captures(pattern, target))
+      end
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
-      next if !action
-      action.run @env, dsl_task(task) do |code|
-        fulfill_args code, dsl_task(task), captures(pattern, task.name)
+      next if actions.empty?
+      task = dsl_task(task)
+      args = captures(pattern, task.name)
+      actions.each do |action|
+        action.run @env, task do |code|
+          resolve(code, task, args)
+        end
       end
-    end
-  end
 
-  def resolve_dep(dep, args, scope)
-    if dep.respond_to? :template
-      dep.template(scope).to_s % args
-    else
-      dep % args
+      extra_tasks.each do |templ|
+        puts resolve(templ, task, args)
+        Rake::Task[resolve(templ, task, args)].invoke
+      end
     end
   end
 
@@ -74,14 +87,19 @@ class DSLCompiler
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
     end
 
-    action = rhs.last.respond_to?(:run) ? rhs.pop : nil
+    # the format is [dep, ...] | [action, ...] | [task, ...], where the deps
+    # and tasks can be omitted, tasks are those will be raked after the actions
+    actions_start = rhs.find_index { |item| item.respond_to?(:run) }
+    actions_end = rhs[actions_start, rhs.length].find_index do |item|
+      !item.respond_to?(:run)
+    end || rhs.length
 
-    get_extra_deps = proc do |captures_hash, scope|
-        rhs.map { |dep| resolve_dep(dep, captures_hash, scope) }
-    end
+    extra_deps = rhs[0, actions_start]
+    actions = rhs[actions_start, actions_end]
+    extra_tasks = rhs[actions_end, rhs.length]
 
     if !lhs.has_inputs?
-      create_rule lhs.pattern, proc {[]}, get_extra_deps, action
+      create_rule lhs.pattern, proc {[]}, actions, extra_deps, extra_tasks
       return
     end
 
@@ -91,8 +109,8 @@ class DSLCompiler
       get_inputs_unscoped = proc { |output| lhs.inputs(output, ext, false) }
 
       # We find auto source from both THE scope and the root
-      create_rule lhs.pattern, get_inputs, get_extra_deps, action
-      create_rule lhs.pattern, get_inputs_unscoped, get_extra_deps, action
+      create_rule lhs.pattern, get_inputs, actions, extra_deps, extra_tasks
+      create_rule lhs.pattern, get_inputs_unscoped, actions, extra_deps, extra_tasks
     end
   end
 end

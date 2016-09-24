@@ -43,8 +43,13 @@ class Token
     end
   end
 
-  def _
-    attach '\\S+'
+  # non capture matching anything
+  def _(*args)
+    if !args.empty?
+      attach args.first.to_s
+    else
+      attach '\\S+'
+    end
   end
 
   def _=(rhs)
