@@ -53,7 +53,7 @@ class Token
   end
 
   def _=(rhs)
-    @compiler.compile(attach('\\S+'), rhs)
+    @compiler.compile(attach('\S+'), rhs)
   end
 
   def has_inputs?
@@ -75,7 +75,7 @@ class Token
   def pattern
     # scopes as leading
     leading = @context.scopes.empty? ? '' : "(#{@context.scopes.join '|'})/"
-    body = @chain.reverse.map(&:to_s).join('__')
+    body = @chain.reverse.map { |s| "(#{s.to_s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
 
