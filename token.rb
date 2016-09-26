@@ -48,7 +48,7 @@ class Token
     if !args.empty?
       attach args.first.to_s
     else
-      attach '\\S+'
+      attach '\S+'
     end
   end
 
@@ -84,13 +84,14 @@ class Token
   end
 
   # These two methods indicate that this is a pattern token
-  def [](pattern)
+  def [](pattern=nil)
+    pattern ||= '\S+'
     symbol = @chain.pop.to_s
     # if the pattern contains child pattern like percent_(\d+), we change the capture to
     # named capture so that it can be captured later. The name is symbol with the index, like func0
     pattern = pattern.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
 
-    if symbol == '_' # _ means "not bound"
+    if symbol == '\S+' # match-everything and not bound
       @chain.push pattern.to_s
     else
       @chain.push "(?<#{symbol}>(#{pattern}))"

@@ -92,7 +92,8 @@ class DSLCompiler
     actions_start = rhs.find_index { |item| item.respond_to?(:run) }
     actions_end = rhs[actions_start, rhs.length].find_index do |item|
       !item.respond_to?(:run)
-    end || rhs.length
+    end 
+    actions_end = actions_end ? actions_end + actions_start : rhs.length
 
     extra_deps = rhs[0, actions_start]
     actions = rhs[actions_start, actions_end]
