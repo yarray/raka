@@ -84,8 +84,7 @@ class Token
   end
 
   # These two methods indicate that this is a pattern token
-  def [](pattern=nil)
-    pattern ||= '\S+'
+  def [](pattern='\S+')
     symbol = @chain.pop.to_s
     # if the pattern contains child pattern like percent_(\d+), we change the capture to
     # named capture so that it can be captured later. The name is symbol with the index, like func0
@@ -99,7 +98,7 @@ class Token
     self
   end
 
-  def []=(pattern, value)
+  def []=(pattern='\S+', value)
     @compiler.compile(self[pattern], value)
   end
 end
