@@ -23,6 +23,9 @@ class DSLCompiler
     OpenStruct.new(
       scope: output_info.scope,
       stem: output_info.stem,
+      func: output_info.func,
+      input_stem: output_info.input_stem,
+      ext: output_info.ext,
       name: name,
       deps: deps,
       deps_str: deps.join(','),
@@ -42,9 +45,10 @@ class DSLCompiler
     text = text
            .gsub('$(scope)', task.scope || '')
            .gsub('$(stem)', task.stem)
+           .gsub('$(input_stem)', task.input_stem || '')
            .gsub('$@', task.name)
            .gsub('$^', task.deps_str)
-           .gsub('$<', task.dep) # TODO change this to input
+           .gsub('$<', task.dep || '')
            .gsub(/\$(\d+)/, '%{\1}') % args
   end
 

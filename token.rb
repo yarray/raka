@@ -16,7 +16,14 @@ class Token
     # xxx? is for minimal match
     info = %r{^((?<scope>\S+)/)*(?<stem>(\S+))(?<ext>\.[^\.]+)$}
       .match(output)
-    OpenStruct.new Hash[info.names.zip(info.captures)]
+    res = Hash[info.names.zip(info.captures)]
+    name_details = /^(\S+?)__(\S+)$/.match(info[:stem])
+    if name_details
+      res = res.merge(func: name_details[1], input_stem: name_details[2])
+    else
+      res = res.merge(func: nil, input_stem: nil)
+    end
+    OpenStruct.new res
   end
 
   def initialize(compiler, context, chain)

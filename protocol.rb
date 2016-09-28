@@ -121,13 +121,21 @@ class Psql < LanguageProtocol
     "#{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1"
   end
 
-  def initialize(opt_str='')
-    @opt_str = opt_str
+  def initialize(options={})
+    @options = options
+  end
+
+  def build(code)
+    if @options[:create].to_s == 'table'
+      "DROP TABLE IF EXISTS :_name_;" +
+      "CREATE TABLE :_name_ AS (" + code + ");"
+    end
   end
 
   def run_script(env, fname, task)
     bash env, %{
-    #{self.class.sh_cmd(task.scope)} #{@opt_str} -f #{fname} | tee #{fname}.log
+    #{self.class.sh_cmd(task.scope)} #{@options[:opt_str]} -v _name_=#{task.stem} \
+      -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     }
   end
@@ -163,7 +171,7 @@ class PsqlFile
 
     params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
 
-    @runner = Psql.new(params.map { |k, v| "-v #{k}=\"#{v}\"" }.join ' ')
+    @runner = Psql.new(opt_str: params.map { |k, v| "-v #{k}=\"#{v}\"" }.join(' '))
     @runner.run_script env, script_file, task
   end
 end
