@@ -91,17 +91,33 @@ class DSLCompiler
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
     end
 
-    # the format is [dep, ...] | [action, ...] | [task, ...], where the deps
-    # and tasks can be omitted, tasks are those will be raked after the actions
+    # the format is [dep, ...] | [action, ...] | [task, ...], where the tasks
+    # are those will be raked after the actions
     actions_start = rhs.find_index { |item| item.respond_to?(:run) }
-    actions_end = rhs[actions_start, rhs.length].find_index do |item|
-      !item.respond_to?(:run)
-    end 
-    actions_end = actions_end ? actions_end + actions_start : rhs.length
+    
+    # case 1: has action
+    if actions_start
+      extra_deps = rhs[0, actions_start]
+      actions_end = rhs[actions_start, rhs.length].find_index do |item|
+        !item.respond_to?(:run)
+      end 
 
-    extra_deps = rhs[0, actions_start]
-    actions = rhs[actions_start, actions_end]
-    extra_tasks = rhs[actions_end, rhs.length]
+      # case 1.1: has task
+      if actions_end
+        actions_end += actions_start
+        actions = rhs[actions_start, actions_end]
+        extra_tasks = rhs[actions_end, rhs.length]
+      # case 1.2: no task
+      else
+        actions = rhs[actions_start, rhs.length]
+        extra_tasks = []
+      end
+    # case 2: no action
+    else
+      extra_deps = rhs
+      actions = []
+      extra_tasks = []
+    end
 
     if !lhs.has_inputs?
       create_rule lhs.pattern, proc {[]}, actions, extra_deps, extra_tasks
