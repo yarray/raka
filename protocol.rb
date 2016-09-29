@@ -65,18 +65,19 @@ class LanguageProtocol
 end
 
 class R < LanguageProtocol
-  def initialize(libs)
+  def initialize(src, libs = [])
+    @src = src
     @libs = libs
   end
 
   def build(code)
-    libraries = [
+    libraries = ([
       :pipeR,
-    ].map { |name| "suppressPackageStartupMessages(library(#{name}))" }
+    ] + @libs).map { |name| "suppressPackageStartupMessages(library(#{name}))" }
 
     sources = ([
       :io,
-    ] + @libs).map { |name| "source('#{SRC_DIR}/#{name}.R')" }
+    ] + (@src ? [@src] : [])).map { |name| "source('#{SRC_DIR}/#{name}.R')" }
 
     extra = [
       '`|` <- `%>>%`',
@@ -87,15 +88,11 @@ class R < LanguageProtocol
       "table_output <- init_table_output(conn_args, args[1])"
     ]
 
-    after = [
-      'system(paste("touch", args[2]))'
-    ]
-
-    [libraries, sources, extra, code, after].join "\n"
+    [libraries, sources, extra, code].join "\n"
   end
 
   def run_script(env, fname, task)
-    env.send :sh, "Rscript #{fname} '#{task.scope || "public"}' '#{task.name}'"
+    env.send :sh, "Rscript #{fname} '#{task.scope || "public"}'"
   end
 end
 
@@ -133,8 +130,11 @@ class Psql < LanguageProtocol
   end
 
   def run_script(env, fname, task)
+    params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
+    param_str = params.map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
+
     bash env, %{
-    #{self.class.sh_cmd(task.scope)} #{@options[:opt_str]} -v _name_=#{task.stem} \
+    #{self.class.sh_cmd(task.scope)} #{param_str} -v _name_=#{task.stem} \
       -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     }
@@ -169,10 +169,9 @@ class PsqlFile
       script_file = "#{SRC_DIR}/#{task.stem}.sql"
     end
 
-    params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
-
-    @runner = Psql.new(opt_str: params.map { |k, v| "-v #{k}=\"#{v}\"" }.join(' '))
-    @runner.run_script env, script_file, task
+    @runner = Psql.new(@options)
+    tmp_f = @runner.create_tmp(@runner.build(File.read(script_file).strip().chomp(';')))
+    @runner.run_script env, tmp_f, task
   end
 end
 
