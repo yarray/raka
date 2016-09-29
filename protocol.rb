@@ -75,9 +75,8 @@ class R < LanguageProtocol
       :pipeR,
     ] + @libs).map { |name| "suppressPackageStartupMessages(library(#{name}))" }
 
-    sources = ([
-      :io,
-    ] + (@src ? [@src] : [])).map { |name| "source('#{SRC_DIR}/#{name}.R')" }
+    sources = ["source('#{File.dirname(__FILE__)}/io.R')"] +
+    (@src ? [@src] : []).map { |name| "source('#{SRC_DIR}/#{name}.R')" }
 
     extra = [
       '`|` <- `%>>%`',
