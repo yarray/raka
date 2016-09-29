@@ -126,12 +126,13 @@ class Psql < LanguageProtocol
     if @options[:create].to_s == 'table'
       "DROP TABLE IF EXISTS :_name_;" +
       "CREATE TABLE :_name_ AS (" + code + ");"
+    else
+      code
     end
   end
 
   def run_script(env, fname, task)
-    params = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
-    param_str = params.map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
+    param_str = (@options[:params] || {}).map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
 
     bash env, %{
     #{self.class.sh_cmd(task.scope)} #{param_str} -v _name_=#{task.stem} \
@@ -160,6 +161,7 @@ class PsqlFile
   end
 
   def run(env, task, &resolve)
+    @options[:params] = Hash[(@options[:params] || {}).map { |k, v| [k, resolve.call(v)] }]
     if @options.has_key? :script_file
       script_file = resolve.call @options[:script_file]
     elsif @options.has_key? :script_name
