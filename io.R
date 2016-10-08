@@ -68,17 +68,17 @@ ggplot_output <- function(report, output, size = c(15, 15), fontScale = 1, compa
     }
 
     report <- report + theme_bw() +
-        theme(axis.title = element_text(size = 10 * fontScale),
-              axis.text = element_text(size = 8 * fontScale),
-              legend.title = element_text(size = 10 * fontScale),
-              legend.text = element_text(size = 8 * fontScale),
-              legend.key.size = unit(10 * fontScale, 'pt'),
+        theme(axis.title = element_text(size = 13 * fontScale),
+              axis.text = element_text(size = 11 * fontScale),
+              legend.title = element_text(size = 13 * fontScale),
+              legend.text = element_text(size = 11 * fontScale),
+              legend.key.size = unit(13 * fontScale, 'pt'),
               legend.margin = unit(0, "cm"),
               legend.background = element_rect(fill = alpha('white', 0)),
               plot.margin = unit(c(margin, margin, 0, 0),"mm"))
 
-    width <- size[1] 
-    height <- size[2] 
+    width <- size[1]
+    height <- size[2]
 
     ggsave(report, filename = output,
            dpi = 300, units = 'cm', width = width, height = height, limitsize = FALSE)
