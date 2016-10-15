@@ -132,39 +132,39 @@ protocol = ("shell" | "r" | "psql") ("*" template | BLOCK )
 
 The corresponding railroad diagrams are:
 
-![](doc/figures/rule.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rule.svg)
 
 
 
-![](doc/figures/target.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target.svg)
 
 
 
-![](doc/figures/target_list.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target_list.svg)
 
 
 
-![](doc/figures/lexpr.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/lexpr.svg)
 
 
 
-![](doc/figures/rexpr.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rexpr.svg)
 
 
 
-![](doc/figures/ltoken.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/ltoken.svg)
 
 
 
-![](doc/figures/rtoken.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rtoken.svg)
 
 
 
-![](doc/figures/word.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/word.svg)
 
 
 
-![](doc/figures/protocol.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/protocol.svg)
 
 
 
