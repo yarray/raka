@@ -1,33 +1,185 @@
-**Raka** is a **DSL** for Data processing based on Rake
+**Raka** is a **DSL**(Domain Specific Language) for D**a**t**a** processing based on top of **Ra**ke. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity. 
 
 ## Why Raka
 
-Data processing tasks can involve plenty of steps, each with its dependencies. Make is the classical tool to handle the situation and I used it to manage hundreds of data processing tasks in the past. However, since it is not dedicated to data processing, Make had several shortcomings which soon became headaches when the number of tasks rose. Rake is better on some aspect but is not perfectly useful for this situation. Fortunately, a rake script is in ruby so we can easily create syntax sugar and more on top of that. Briefly, Raka offers some advantages that Make or Rake does not have:
+Data processing tasks can involve plenty of steps, each with its dependencies. Make is the classical tool to handle the situation but it had several shortcomings which soon became headaches when the number of tasks rises. Rake is better here but can still be improved from various aspects. Raka offers the following advantages:
 
-1. Extensible and context aware protocol architecture
-2. Advanced pattern matching to maximize code reuse.
-3. Other programming languages can be easily embedded
-4. Auto dependency and naming by conventions when data is derived from a single source
-5. Support scopes for multiple parallel research
-6. Terse syntax
+1. Advanced pattern matching to maximize code reuse.
+2. Extensible and context-aware protocol architecture
+3. Multilingual. Other programming languages can be easily embedded
+4. Auto dependency and naming by conventions
+5. Support scopes
+6. Terser syntax
 
-... and many more. See the next sections for more hints about why Raka can be useful for you.
+... and more.
 
-## Concepts
+## Installation
 
-The basic shape of rules is:
+Raka is a drop-in library for rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. To use raka, one has to install ruby and rake first. Ruby is available for most *nix systems including Mac OSX so the only task is to install rake like:
 
-<!-- TODO -->
+``` bash
+gem install rake
+```
 
-In Raka, these definitions are implemented with the following ruby syntax:
+ The next step is to clone this project to local machine, and `require` the `dsl.rb` file in your Rakefile.
 
-1. `expression` is separated by dot, like `ext.token.token.token`
-2. `dependencies` and `postjobs` are just arrays
-3. `name` can be anything that does not conflict with important staffs, while `_` means anything, or not binding to variables if with patterns
-4. `pattern` is a regex str (note it CANNOT be a Regex itself), default to anything
-4. `template` is a string to be resolved (See Variable resolving below)
-5. `ext` default to csv and pdf, but is configurable in DSL.
-6. `string` is anything can be to_s-ed
+## Quick Start
+
+First create a file named `Rakefile` and import & initialize the DSL (assuming this repository is cloned at the same place of the `Rakefile`):
+
+``` ruby
+require_relative './raka/dsl'
+
+dsl = DSL.new(self,
+  output_types: [:txt, :table, :pdf, :idx],
+  input_types: [:txt, :table]
+)
+```
+
+Then the code below will define two simple rules:
+
+``` ruby
+txt.first50.comment = shell* "sed 's#^#//#' first50.txt > $@"
+txt.first50 = [txt.input] | shell* "head -n 50 $< > $@"
+```
+
+For testing let's prepare an input file named `input.txt`:
+
+``` bash
+seq 1000 > input.txt
+```
+
+We can then invoke `rake comment__first50.txt`, the script will read data from `input.txt`, get the first 50 lines, and then insert `//` at the beginning of each line.
+
+The workflow here is as follows:
+
+1. Try to find `comment__first50.txt`: not exists
+2. Rule `txt.first50.comment` matched
+3. For rule `txt.first50.comment`, find input file `first50.txt` or `first50.table`, neither exists
+4. Rule `txt.first50` matched
+5. Rule `txt.first50` has no input but a depended target `txt.input`
+6. Find file `input.txt` or `input.table`, use the former
+7. Invoke by rule `txt.first50`
+8. Invoke by rule `txt.first50.comment`
+
+This illustrates some basic ideas but may not be particularly interesting. Following is a much more sophisticated example from real world research which covers more features.
+
+``` ruby
+SRC_DIR = File.absolute_path 'src'
+USER = 'postgres'
+DB = 'osm'
+HOST = 'localhost'
+PORT = 5432
+
+def idx_this() [idx._('$(stem)')] end
+
+dsl.scope :de
+
+idx._ = psqlf(script_name: '$stem_idx.sql')
+pdf.buildings.func['(\S+)_graph'] = r(:graph)* %[
+  table_input("$(input_stem)") | draw_%{func0} | ggplot_output('$@') ]
+table.buildings = [csv.admin] | psqlf(admin: '$<') | idx_this
+```
+
+Assume that we have a schema named `de` in database `osm`, have a input file `admin.csv`, and have `graph.R` and `buildings.sql` under `src/`. Now further assume that `graph.R` contains two functions:
+
+``` r
+draw_stat_snapshot <- function(d) { ... }
+draw_user_trend <- function(d) { ... }
+```
+
+...and `buildings.sql` contains table creation code like:
+
+``` sql
+DROP TABLE IF EXISTS buildings;
+CREATE TABLE buildings AS ( ... );
+```
+
+We may also have a `buildings_idx.sql` to create index for the table.
+
+Then we can run either `rake de/stat_snapshot_graph__buildings.pdf` or `rake de/user_trend_graph__buildings.pdf`, which will do a bunch of things at first run (take the former as example):
+
+1. Target file not found. 
+2. Rule `pdf.buildings.func['(\S+)_graph']` matched. `stat_snapshot_graph` is bound to `func` and `stat_snapshot` is bound to `func0`.
+3. None of the four possible input files: `de/buildings.table`, `de/buildings.txt`,`buildings.table`, `buildings.txt` can be found. Rule `table.buildings` matched and the only dependecy `admin.csv` found.
+4. The protocol `psqlf` finds the source file `src/buildings.sql`, intepolate the options with automatic variables (`$<` as `admin.csv`), run the sql, and create a placeholder file `de/buildings.table` afterwards.
+5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run `buildings_idx.sql`, then create a placeholder file `buildings.idx`.
+6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as `buildings`, `$@` as `de/stat_snapshot_graph__buildings.pdf`) and the variables (`func`, `stat_snapshot`) bound before.
+7. Run the R code. The `buildings` table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
+
+## Syntax of Rules
+
+It is possible to use Raka without knowledges for ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (EBNF form):
+
+``` ebnf
+rule ::= lexpr '=' (target_list '|')? protocol ('|' target_list)?
+
+target ::= rexpr | template
+
+target_list ::= '[]' | '[' target ( ',' target )* ']'
+
+lexpr ::= ext '.' (ltoken '.')* ltoken
+rexpr ::= ext '.' rtoken ('.' rtoken)*
+
+ltoken ::= word | word '[' pattern ']'
+rtoken ::= word | word '(' template ')'
+
+word ::= [_a-z0-9]+ /* cannot contain '__' */
+
+protocol ::= ('shell' | 'r' | 'psql') ('*' '%(' template ')' | BLOCK )
+           | 'psqlf' | 'psqlf' '(' HASH ')'
+```
+
+*rule:*
+
+![rule](/Users/yarray/projects/academic/raka/doc/figures/1.svg)
+*target:*
+
+![target](/Users/yarray/projects/academic/raka/doc/figures/2.svg)
+
+*target_list:*
+
+![target_list](/Users/yarray/projects/academic/raka/doc/figures/3.svg)
+
+*lexpr:*
+
+![lexpr](/Users/yarray/projects/academic/raka/doc/figures/4.svg)
+
+*rexpr:*
+
+![rexpr](/Users/yarray/projects/academic/raka/doc/figures/5.svg)
+
+*ltoken:*
+
+![ltoken](/Users/yarray/projects/academic/raka/doc/figures/6.svg)
+
+*rtoken:*
+
+![rtoken](/Users/yarray/projects/academic/raka/doc/figures/7.svg)
+
+*word:*
+
+![word](/Users/yarray/projects/academic/raka/doc/figures/8.svg)
+
+*protocol:*
+
+![protocol](/Users/yarray/projects/academic/raka/doc/figures/9.svg)
+
+
+
+![](doc/figures/rule.svg)
+
+
+
+![](doc/figures/word.svg)
+
+The definition is concise but several details are omitted for simplicity:
+
+1. **BLOCK** and **HASH** is ruby's block and hash object.
+2. A **template** is just a ruby string, but with some placeholders (see the next section)
+3. A **pattern** is just a ruby string which represents regex
+4. The listed protocols are merely what we offered now. It can be greatly extended.
+5. Nearly any concept in the syntax can be replaced by a suitable ruby variable.
 
 
 ## Rule, pattern matching, and variable resolving
@@ -47,8 +199,6 @@ csv.data.rules = [txt.spec] | <protocol> | []
 
 table.objects[].geom = [csv._('%{objects}'), 'srs.csv'] | <protocol> | [idx._('%{objects}')]
 ```
-
-##
 
 ## Basic API
 
@@ -96,8 +246,6 @@ r(src:str, libs=[])* code::templ_str { |task| ... }
 # options = { script_name: , script_file: , params: }
 psqlf(options={})
 ```
-
-## Functionalities and examples
 
 ## Rakefile Template
 

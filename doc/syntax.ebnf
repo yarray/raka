@@ -1,0 +1,16 @@
+rule = lexpr "=" {target_list "|"} protocol {"|" target_list};
+
+target = rexpr | template;
+
+target_list = "[]" | "[" target {"," target} "]";
+
+lexpr = ext "." {ltoken "."} ltoken;
+rexpr = ext "." rtoken {"." rtoken};
+
+ltoken = word | word "[" pattern "]";
+rtoken = word | word "(" template ")";
+
+word = ("_" | letter) { letter | digit | "_" };
+
+protocol = ("shell" | "r" | "psql") ("*" "%(" template ")" | BLOCK )
+           | "psqlf" | "psqlf" "(" HASH ")";
