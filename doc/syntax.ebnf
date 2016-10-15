@@ -12,5 +12,5 @@ rtoken = word | word "(" template ")";
 
 word = ("_" | letter) { letter | digit | "_" };
 
-protocol = ("shell" | "r" | "psql") ("*" "%(" template ")" | BLOCK )
-           | "psqlf" | "psqlf" "(" HASH ")";
+protocol = ("shell" | "r" | "psql") ("*" template | BLOCK )
+         | "psqlf" | "psqlf" "(" HASH ")";

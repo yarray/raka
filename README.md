@@ -109,84 +109,81 @@ Then we can run either `rake de/stat_snapshot_graph__buildings.pdf` or `rake de/
 
 ## Syntax of Rules
 
-It is possible to use Raka without knowledges for ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (EBNF form):
+It is possible to use Raka with little knowledge of ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (EBNF form):
 
 ``` ebnf
-rule ::= lexpr '=' (target_list '|')? protocol ('|' target_list)?
+rule = lexpr "=" {target_list "|"} protocol {"|" target_list};
 
-target ::= rexpr | template
+target = rexpr | template;
 
-target_list ::= '[]' | '[' target ( ',' target )* ']'
+target_list = "[]" | "[" target {"," target} "]";
 
-lexpr ::= ext '.' (ltoken '.')* ltoken
-rexpr ::= ext '.' rtoken ('.' rtoken)*
+lexpr = ext "." {ltoken "."} ltoken;
+rexpr = ext "." rtoken {"." rtoken};
 
-ltoken ::= word | word '[' pattern ']'
-rtoken ::= word | word '(' template ')'
+ltoken = word | word "[" pattern "]";
+rtoken = word | word "(" template ")";
 
-word ::= [_a-z0-9]+ /* cannot contain '__' */
+word = ("_" | letter) { letter | digit | "_" };
 
-protocol ::= ('shell' | 'r' | 'psql') ('*' '%(' template ')' | BLOCK )
-           | 'psqlf' | 'psqlf' '(' HASH ')'
+protocol = ("shell" | "r" | "psql") ("*" template | BLOCK )
+         | "psqlf" | "psqlf" "(" HASH ")";
 ```
 
-*rule:*
-
-![rule](/Users/yarray/projects/academic/raka/doc/figures/1.svg)
-*target:*
-
-![target](/Users/yarray/projects/academic/raka/doc/figures/2.svg)
-
-*target_list:*
-
-![target_list](/Users/yarray/projects/academic/raka/doc/figures/3.svg)
-
-*lexpr:*
-
-![lexpr](/Users/yarray/projects/academic/raka/doc/figures/4.svg)
-
-*rexpr:*
-
-![rexpr](/Users/yarray/projects/academic/raka/doc/figures/5.svg)
-
-*ltoken:*
-
-![ltoken](/Users/yarray/projects/academic/raka/doc/figures/6.svg)
-
-*rtoken:*
-
-![rtoken](/Users/yarray/projects/academic/raka/doc/figures/7.svg)
-
-*word:*
-
-![word](/Users/yarray/projects/academic/raka/doc/figures/8.svg)
-
-*protocol:*
-
-![protocol](/Users/yarray/projects/academic/raka/doc/figures/9.svg)
-
-
+The corresponding railroad diagrams are:
 
 ![](doc/figures/rule.svg)
 
 
 
+![](doc/figures/target.svg)
+
+
+
+![](doc/figures/target_list.svg)
+
+
+
+![](doc/figures/lexpr.svg)
+
+
+
+![](doc/figures/rexpr.svg)
+
+
+
+![](doc/figures/ltoken.svg)
+
+
+
+![](doc/figures/rtoken.svg)
+
+
+
 ![](doc/figures/word.svg)
+
+
+
+![](doc/figures/protocol.svg)
+
+
 
 The definition is concise but several details are omitted for simplicity:
 
 1. **BLOCK** and **HASH** is ruby's block and hash object.
-2. A **template** is just a ruby string, but with some placeholders (see the next section)
-3. A **pattern** is just a ruby string which represents regex
+2. A **template** is just a ruby string, but with some placeholders (see the next section for details)
+3. A **pattern** is just a ruby string which represents regex (see the next section for details)
 4. The listed protocols are merely what we offered now. It can be greatly extended.
 5. Nearly any concept in the syntax can be replaced by a suitable ruby variable.
 
 
 ## Rule, pattern matching, and variable resolving
 
+### TODO not complete yet
+
 A `expression` corresponds to an actual file, the naming convention is 
 
-``` 
+``` ruby
 ext.token1.token2...tokenN (target) -> tokenN__...__token2__token1.output_type 
 ```
 
@@ -194,7 +191,7 @@ When a token has pattern or template it has be resolved first. See the "Pattern 
 
 Examples:
 
-```
+```ruby
 csv.data.rules = [txt.spec] | <protocol> | []
 
 table.objects[].geom = [csv._('%{objects}'), 'srs.csv'] | <protocol> | [idx._('%{objects}')]
@@ -202,7 +199,7 @@ table.objects[].geom = [csv._('%{objects}'), 'srs.csv'] | <protocol> | [idx._('%
 
 ## Basic API
 
-### DSL API
+### Initialization and Options
 
 These APIs are bounded to an instance of DSL, you can create the object at the top:
 
@@ -216,7 +213,7 @@ The argument `<env>` should be the *self* of a running Rakefile. In most case yo
 dsl = DSL.new(self, <options>)
 ```
 
-The argument `options` currently support `output_types` and `input_types`. For each `output_types`, you will get an extra function to bootstrap a rule. For example, with
+The argument `options` currently support `output_types` and `input_types`. For each item in `output_types`, you will get an extra function to bootstrap a rule. For example, with
 
 
 ``` ruby
@@ -232,9 +229,11 @@ pdf.graph = ...
 
 which will generate data.csv and graph.pdf
 
-The `input_types` involves the strategy to find dependencies, which will be explained in detail later.
+The `input_types` involves the strategy to find inputs. For example, raka will try to find both *numbers.csv* and *numbers.table* for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
 
-### protocol API
+### Scope
+
+### Protocols
 
 Currently Raka support 4 protocols: shell, psql, r and psqlf.
 
@@ -254,7 +253,3 @@ psqlf(options={})
 ## Compare to other tools
 
 Raka borrows some ideas from Drake but not much (currently mainly the name "protocol"). Briefly we have different visions and maybe different suitable senarios.
-
-## TODO
-
-Rake is in fact an (imperfect) implementation of a more general concept model. The concepts should be clarified somewhere and linked back

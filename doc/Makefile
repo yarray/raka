@@ -1,6 +1,8 @@
-EBNF_ENV=AFMPATH=/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/matplotlib/mpl-data/fonts/pdfcorefonts/ RGBPATH=/opt/X11/share/X11
-FONT_SIZE=13
-DIM=800
+# The afm files of texlive 2015 changes naming strategy and contains no Times-Roman.afm which is searched by ebnf2ps
+EBNF_ENV=AFMPATH=~/others/fonts/afm/ RGBPATH=/opt/X11/share/X11
+FONT=Helvetica
+FONT_SCALE=12
+DIM=1000
 
 all: \
 	figures/rule.svg \
@@ -17,11 +19,12 @@ all: \
 figures/%.eps : syntax.ebnf
 	$(EBNF_ENV) ebnf2ps \
 		-borderDistX $(DIM) -borderDistY $(DIM) \
-		-tScale $(FONT_SIZE) -ntScale $(FONT_SIZE) -titleScale 15 \
-		-lineWidth 80 -arrowSize 400 \
+		-tScale $(FONT_SCALE) -ntScale $(FONT_SCALE) -titleScale 15 \
+		-lineWidth 80 -arrowSize 300 \
+		-tFont "$(FONT)" -ntFont "$(FONT)" \
 		-tBg "Gold" -ntBg "Cornsilk" \
 		$^ $*
-	cp $*.eps $@
+	mv $*.eps $@
 
 figures/%.pdf : figures/%.eps
 	epstopdf $< -o $@
