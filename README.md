@@ -210,18 +210,18 @@ One can write special token `_` or `something[]` if the captured value is useful
 
 In some places of `rexpr`, templates can be written instead of strings, so that it can represent different values at runtime. There are two types of variables that can be used in templates. The first is automatic variables, which is just like `$@` in Make or `task.name` in Rake. We even preserve some Make conventions for easier migrations. All automatic varibales begin with `$`. The possible automatic variables are:
 
-| symbol        | meaning                | symbol          | meaning                         |
-| ------------- | ---------------------- | --------------- | ------------------------------- |
-| $@            | output file            | $^              | all dependecies (sep by spaces) |
-| $<            | first dependency       | \$0, \$1, … \$i | ith depdency                    |
-| $(scope)      | scope for current task | $(stem)         | stem of the output file         |
-| $(input_stem) | stem of the input file |                 |                                 |
+| symbol        | meaning                | symbol       | meaning                         |
+| ------------- | ---------------------- | ------------ | ------------------------------- |
+| $@            | output file            | $^           | all dependecies (sep by spaces) |
+| $<            | first dependency       | $0, $1, … $i | ith depdency                    |
+| $(scope)      | scope for current task | $(stem)      | stem of the output file         |
+| $(input_stem) | stem of the input file |              |                                 |
 
-The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
+The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
 
 The replacement of variables happen before any process to the template string. So do not include the symbols for automatic variables or `%{<anything>}` in templates.
 
-Templates can happen in various places. For depdencies and post jobs, tokens with parenthesis can wrap in templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Where templates can be applied in actions depends on the protocols and will be explained later in the [Protocols](##protocols) section
+Templates can happen in various places. For depdencies and post jobs, tokens with parenthesis can wrap in templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Where templates can be applied in actions depends on the protocols and will be explained later in the [Protocols](###protocols) section
 
 ## APIs
 
