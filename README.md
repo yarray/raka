@@ -105,9 +105,9 @@ Then we can run either `rake de/stat_snapshot_graph__buildings.pdf` or `rake de/
 
 1. Target file not found. 
 2. Rule `pdf.buildings.func['(\S+)_graph']` matched. "stat_snapshot_graph" is bound to `func` and "stat_snapshot" is bound to `func0`.
-3. None of the four possible input files: *de/buildings.table*, *de/buildings.txt*, *buildings.table*, *buildings.txt* can be found. Rule `table.buildings` matched and the only dependecy file *admin.csv* found.
+3. None of the four possible input files: *de/buildings.table*, *de/buildings.txt*, *buildings.table*, *buildings.txt* can be found. Rule `table.buildings` is matched and the only dependecy file *admin.csv* is found.
 4. The protocol `psqlf` finds the source file *src/buildings.sql*, intepolate the options with automatic variables (`$<` as "admin.csv"), run the sql, and create a placeholder file *de/buildings.table* afterwards.
-5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run *buildings_idx.sql*, then create a placeholder file *buildings.idx*.
+5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run *buildings_idx.sql*, then create a placeholder file *de/buildings.idx*.
 6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as "buildings", `$@` as "de/stat_snapshot_graph__buildings.pdf") and the variables (`func`, `func0`) bound before.
 7. Run the R code. The *buildings* table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
 
