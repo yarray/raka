@@ -13,7 +13,7 @@ Data processing tasks can involve plenty of steps, each with its dependencies. M
 
 ... and more.
 
-## Installation
+## Usage
 
 Raka is a drop-in library for rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. To use raka, one has to install ruby and rake first. Ruby is available for most *nix systems including Mac OSX so the only task is to install rake like:
 
@@ -21,11 +21,15 @@ Raka is a drop-in library for rake. Though rake is cross platform, raka may not 
 gem install rake
 ```
 
- The next step is to clone this project to local machine, and `require` the `dsl.rb` file in your Rakefile.
+The next step is to clone this project to local machine, and `require` the `dsl.rb` file in your Rakefile like (assuming this repository is cloned at the same place of the `Rakefile`)::
+
+```ruby
+require_relative './raka/dsl'
+```
 
 ## Quick Start
 
-First create a file named `Rakefile` and import & initialize the DSL (assuming this repository is cloned at the same place of the `Rakefile`):
+First create a file named `Rakefile` and import & initialize the DSL
 
 ``` ruby
 require_relative './raka/dsl'
@@ -39,8 +43,8 @@ dsl = DSL.new(self,
 Then the code below will define two simple rules:
 
 ``` ruby
-txt.first50.comment = shell* "sed 's#^#//#' first50.txt > $@"
-txt.first50 = [txt.input] | shell* "head -n 50 $< > $@"
+txt.sort.first50 = shell* "cat sort.txt | head -n 50 > $@"
+txt.sort = [txt.input] | shell* "cat $< | sort -rn > $@"
 ```
 
 For testing let's prepare an input file named `input.txt`:
@@ -49,18 +53,18 @@ For testing let's prepare an input file named `input.txt`:
 seq 1000 > input.txt
 ```
 
-We can then invoke `rake comment__first50.txt`, the script will read data from `input.txt`, get the first 50 lines, and then insert `//` at the beginning of each line.
+We can then invoke `rake first50.txt`, the script will read data from *input.txt*, sort the numbers descendingly and get the first 50 lines.
 
 The workflow here is as follows:
 
-1. Try to find `comment__first50.txt`: not exists
-2. Rule `txt.first50.comment` matched
-3. For rule `txt.first50.comment`, find input file `first50.txt` or `first50.table`, neither exists
-4. Rule `txt.first50` matched
-5. Rule `txt.first50` has no input but a depended target `txt.input`
-6. Find file `input.txt` or `input.table`, use the former
-7. Invoke by rule `txt.first50`
-8. Invoke by rule `txt.first50.comment`
+1. Try to find *first50__sort.txt*: not exists
+2. Rule `txt.sort.first50` matched
+3. For rule `txt.sort.first50`, find input file *sort.txt* or *sort.table*. Neither exists
+4. Rule `txt.sort` matched
+5. Rule `txt.sort` has no input but a depended target `txt.input`
+6. Find file *input.txt* or *input.table*. Use the former
+7. Run rule `txt.sort` and create *sort.txt*
+8. Run rule `txt.sort.first50` and create *first50__sort.txt*
 
 This illustrates some basic ideas but may not be particularly interesting. Following is a much more sophisticated example from real world research which covers more features.
 
@@ -81,31 +85,31 @@ pdf.buildings.func['(\S+)_graph'] = r(:graph)* %[
 table.buildings = [csv.admin] | psqlf(admin: '$<') | idx_this
 ```
 
-Assume that we have a schema named `de` in database `osm`, have a input file `admin.csv`, and have `graph.R` and `buildings.sql` under `src/`. Now further assume that `graph.R` contains two functions:
+Assume that we have a schema named *de* in database *osm*, have a input file *admin.csv*, and have *graph.R* and *buildings.sql* under *src/*. Now further assume that *graph.R* contains two functions:
 
 ``` r
 draw_stat_snapshot <- function(d) { ... }
 draw_user_trend <- function(d) { ... }
 ```
 
-...and `buildings.sql` contains table creation code like:
+...and *buildings.sql* contains table creation code like:
 
 ``` sql
 DROP TABLE IF EXISTS buildings;
 CREATE TABLE buildings AS ( ... );
 ```
 
-We may also have a `buildings_idx.sql` to create index for the table.
+We may also have a *buildings_idx.sql* to create index for the table.
 
 Then we can run either `rake de/stat_snapshot_graph__buildings.pdf` or `rake de/user_trend_graph__buildings.pdf`, which will do a bunch of things at first run (take the former as example):
 
 1. Target file not found. 
-2. Rule `pdf.buildings.func['(\S+)_graph']` matched. `stat_snapshot_graph` is bound to `func` and `stat_snapshot` is bound to `func0`.
-3. None of the four possible input files: `de/buildings.table`, `de/buildings.txt`,`buildings.table`, `buildings.txt` can be found. Rule `table.buildings` matched and the only dependecy `admin.csv` found.
-4. The protocol `psqlf` finds the source file `src/buildings.sql`, intepolate the options with automatic variables (`$<` as `admin.csv`), run the sql, and create a placeholder file `de/buildings.table` afterwards.
-5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run `buildings_idx.sql`, then create a placeholder file `buildings.idx`.
-6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as `buildings`, `$@` as `de/stat_snapshot_graph__buildings.pdf`) and the variables (`func`, `stat_snapshot`) bound before.
-7. Run the R code. The `buildings` table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
+2. Rule `pdf.buildings.func['(\S+)_graph']` matched. "stat_snapshot_graph" is bound to `func` and "stat_snapshot" is bound to `func0`.
+3. None of the four possible input files: *de/buildings.table*, *de/buildings.txt*, *buildings.table*, *buildings.txt* can be found. Rule `table.buildings` matched and the only dependecy file *admin.csv* found.
+4. The protocol `psqlf` finds the source file *src/buildings.sql*, intepolate the options with automatic variables (`$<` as "admin.csv"), run the sql, and create a placeholder file *de/buildings.table* afterwards.
+5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run *buildings_idx.sql*, then create a placeholder file *buildings.idx*.
+6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as "buildings", `$@` as "de/stat_snapshot_graph__buildings.pdf") and the variables (`func`, `func0`) bound before.
+7. Run the R code. The *buildings* table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
 
 ## Syntax of Rules
 
