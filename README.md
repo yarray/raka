@@ -27,7 +27,7 @@ The next step is to clone this project to local machine, and `require` the `dsl.
 require_relative './raka/dsl'
 ```
 
-## Quick Start
+## For the Impatient
 
 First create a file named `Rakefile` and import & initialize the DSL
 
@@ -181,29 +181,51 @@ The definition is concise but several details are omitted for simplicity:
 5. Nearly any concept in the syntax can be replaced by a suitable ruby variable.
 
 
-## Rule, pattern matching, and variable resolving
+## Pattern matching and template resolving
 
-### TODO not complete yet
+When defined a rule like `lexpr = rexpr`, the left side represents a pattern and the right side contains specifications for extra dependecies, actions and some targets to create thereafter. When raking a target file, the left sides of the rules will be examined one by one until a rule is matched. The matching process based on Regex also support named captures so that some varibales can be bound for use in the right side.
 
-A `expression` corresponds to an actual file, the naming convention is 
+The specifications on the right side of a rule can be incomplete from various aspects, that is, they can contains some templates. The "holes" in the templates will be fulfilled by automatic variables and variables bounded when matching the left side.
+
+### Pattern matching
+
+To match a given *file* with a `lexpr`, asides the extension, the substrings of the file name between "\_\_" are mapped to tokens separated by `.`, in reverse order. After that, each substring is matched to the  corresponding token or the regex in `[]`. For example, the rule
 
 ``` ruby
-ext.token1.token2...tokenN (target) -> tokenN__...__token2__token1.output_type 
+pdf.buildings.indicator['\S+'].top['top_(\d+)']
 ```
 
-When a token has pattern or template it has be resolved first. See the "Pattern matching and Variable resolving" section.
+can match "top\_50\__node\_num__buildings.pdf". The logical process is:
 
-Examples:
+1. The extension `pdf` matches.
+2. The substrings and the tokens are paired and they all match:
+   * `buildings ~ buildings`
+   * `'\S+' ~ node_num`
+   * `top_(\d+) ~ top_50 `
+3. Two levels of captures are made. First, 'node_num' is captured as `indicator`, 'top_50' is captured as `top`; Second, '50' is captured as `top0` since `\d+` is wrapped in parenthesis and is the first.
 
-```ruby
-csv.data.rules = [txt.spec] | <protocol> | []
+One can write special token `_` or `something[]` if the captured value is useful later, as the syntax sugar of `something['\S+']`.
 
-table.objects[].geom = [csv._('%{objects}'), 'srs.csv'] | <protocol> | [idx._('%{objects}')]
-```
+### Template resolving
 
-## Basic API
+In some places of `rexpr`, templates can be written instead of strings, so that it can represent different values at runtime. There are two types of variables that can be used in templates. The first is automatic variables, which is just like `$@` in Make or `task.name` in Rake. We even preserve some Make conventions for easier migrations. All automatic varibales begin with `$`. The possible automatic variables are:
 
-### Initialization and Options
+| symbol        | meaning                | symbol          | meaning                         |
+| ------------- | ---------------------- | --------------- | ------------------------------- |
+| $@            | output file            | $^              | all dependecies (sep by spaces) |
+| $<            | first dependency       | \$0, \$1, … \$i | ith depdency                    |
+| $(scope)      | scope for current task | $(stem)         | stem of the output file         |
+| $(input_stem) | stem of the input file |                 |                                 |
+
+The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
+
+The replacement of variables happen before any process to the template string. So do not include the symbols for automatic variables or `%{<anything>}` in templates.
+
+Templates can happen in various places. For depdencies and post jobs, tokens with parenthesis can wrap in templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Where templates can be applied in actions depends on the protocols and will be explained later in the [Protocols](##protocols) section
+
+## APIs
+
+### Initialization and options
 
 These APIs are bounded to an instance of DSL, you can create the object at the top:
 
