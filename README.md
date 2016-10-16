@@ -1,4 +1,4 @@
-**Raka** is a **DSL**(Domain Specific Language) for D**a**t**a** processing based on top of **Ra**ke. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity. 
+**Raka** is a **DSL**(Domain Specific Language)  on top of **Ra**ke for managing d**a**t**a** processing tasks. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity. 
 
 ## Why Raka
 
