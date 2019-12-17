@@ -5,10 +5,10 @@ dsl = DSL.new(self,
   input_types: [:table, :csv])
 
 table.year_timespots = shell* 'echo $@'
-csv.year_timespots.round = shell('~')* 'echo $PWD'
 
 dsl.scopes :de
 
+csv.year_timespots.round = shell('~')* 'echo $PWD'
 csv.compound_building.year.geom = ['round__year_timespots.csv']
 
 dsl.scopes :bw_de, :de
