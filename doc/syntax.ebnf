@@ -4,7 +4,7 @@ target = rexpr | template;
 
 target_list = "[]" | "[" target {"," target} "]";
 
-lexpr = ext "." {ltoken "."} ltoken;
+lexpr = ext "." ltoken {"." ltoken};
 rexpr = ext "." rtoken {"." rtoken};
 
 ltoken = word | word "[" pattern "]";

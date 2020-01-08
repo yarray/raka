@@ -7,6 +7,9 @@ Metrics/LineLength:
 Metrics/MethodLength: 
   Max: 20
 
+Naming/BinaryOperatorParameterName:
+  Enabled: false
+
 # Rakefile with dsl is not normal ruby code
 AllCops:
   Exclude:

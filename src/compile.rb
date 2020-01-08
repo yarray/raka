@@ -1,7 +1,8 @@
-require 'rake'
+# frozen_string_literal: true
 
 require_relative './token'
 
+# compiles rule (lhs = rhs) to rake task
 class DSLCompiler
   # keep env as running environment of rake since we want to inject rules
   def initialize(env, options)
@@ -34,7 +35,7 @@ class DSLCompiler
     )
   end
 
-  def resolve(target, task, args={})
+  def resolve(target, task, args = {})
     # convert target to text whether it is expression or already text
     text = target.respond_to?(:template) ? target.template(task.scope).to_s : target.to_s
 
@@ -42,14 +43,14 @@ class DSLCompiler
     args = Hash[(0...task.deps.size).zip task.deps].merge args
 
     # gsub refer ith dependency as $i
-    text = text
-           .gsub('$(scope)', task.scope || '')
-           .gsub('$(stem)', task.stem)
-           .gsub('$(input_stem)', task.input_stem || '')
-           .gsub('$@', task.name)
-           .gsub('$^', task.deps_str)
-           .gsub('$<', task.dep || '')
-           .gsub(/\$(\d+)/, '%{\1}') % args
+    text
+      .gsub('$(scope)', task.scope || '')
+      .gsub('$(stem)', task.stem)
+      .gsub('$(input_stem)', task.input_stem || '')
+      .gsub('$@', task.name)
+      .gsub('$^', task.deps_str)
+      .gsub('$<', task.dep || '')
+      .gsub(/\$(\d+)/, '%{\1}') % args
   end
 
   def captures(pattern, target)
@@ -70,10 +71,11 @@ class DSLCompiler
       inputs + extra_deps
     end]) do |task|
       next if actions.empty?
+
       task = dsl_task(task)
       args = captures(pattern, task.name)
       actions.each do |action|
-        action.run @env, task do |code|
+        action.call @env, task do |code|
           resolve(code, task, args)
         end
       end
@@ -91,23 +93,23 @@ class DSLCompiler
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
     end
 
-    # the format is [dep, ...] | [action, ...] | [task, ...], where the tasks
+    # the format is [dep, ...] | [action, ...] | [post, ...], where the posts
     # are those will be raked after the actions
-    actions_start = rhs.find_index { |item| item.respond_to?(:run) }
-    
+    actions_start = rhs.find_index { |item| item.respond_to?(:call) }
+
     # case 1: has action
     if actions_start
       extra_deps = rhs[0, actions_start]
       actions_end = rhs[actions_start, rhs.length].find_index do |item|
-        !item.respond_to?(:run)
-      end 
+        !item.respond_to?(:call)
+      end
 
-      # case 1.1: has task
+      # case 1.1: has post
       if actions_end
         actions_end += actions_start
         actions = rhs[actions_start, actions_end]
         extra_tasks = rhs[actions_end, rhs.length]
-      # case 1.2: no task
+      # case 1.2: no post
       else
         actions = rhs[actions_start, rhs.length]
         extra_tasks = []
@@ -119,8 +121,8 @@ class DSLCompiler
       extra_tasks = []
     end
 
-    if !lhs.has_inputs?
-      create_rule lhs.pattern, proc {[]}, actions, extra_deps, extra_tasks
+    unless lhs.inputs?
+      create_rule lhs.pattern, proc { [] }, actions, extra_deps, extra_tasks
       return
     end
 
