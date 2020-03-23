@@ -1,9 +1,9 @@
 {
-  "scopeName": "raka-python.injection",
+  "scopeName": "raka-<%= lang %>.injection",
   "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "py(\\*) (%\\()",
+      "begin": "<%= func %>(\\*) (%\\()",
       "end": "\\)",
       "name": "meta.embedded.block",
       "beginCaptures": {
@@ -19,15 +19,15 @@
           "name": "punctuation.definition.string.end.ruby"
         }
       },
-      "contentName": "meta.embedded.python",
+      "contentName": "meta.embedded.<%= lang %>",
       "patterns": [
         {
-          "include": "source.python"
+          "include": "source.<%= lang %>"
         }
       ]
     },
     {
-      "begin": "py(\\*) (\")",
+      "begin": "<%= func %>(\\*) (\")",
       "end": "\"",
       "name": "meta.embedded.block",
       "beginCaptures": {
@@ -43,21 +43,21 @@
           "name": "punctuation.definition.string.end.ruby"
         }
       },
-      "contentName": "meta.embedded.python",
+      "contentName": "meta.embedded.<%= lang %>",
       "patterns": [
         {
-          "include": "source.python"
+          "include": "source.<%= lang %>"
         }
       ]
     },
     {
-      "begin": "(?><<[-~](\"?)((?:[_\\w]+_|)PYTHON)\\b\\1)",
+      "begin": "(?><<[-~](\"?)((?:[_\\w]+_|)<%= lang.upcase %>)\\b\\1)",
       "beginCaptures": {
         "0": {
           "name": "punctuation.definition.string.begin.ruby"
         }
       },
-      "contentName": "meta.embedded.python",
+      "contentName": "meta.embedded.<%= lang %>",
       "end": "\\s*\\2$\\n?",
       "endCaptures": {
         "0": {
@@ -67,7 +67,7 @@
       "name": "meta.embedded.block",
       "patterns": [
         {
-          "include": "source.python"
+          "include": "source.<%= lang %>"
         }
       ]
     }

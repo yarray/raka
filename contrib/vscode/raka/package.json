@@ -31,7 +31,7 @@
       },
       {
         "path": "./syntaxes/psqlInjection.json",
-        "scopeName": "raka-psql.injection",
+        "scopeName": "raka-sql.injection",
         "injectTo": [
           "source.ruby"
         ],

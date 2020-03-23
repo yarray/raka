@@ -49,6 +49,27 @@
           "include": "source.shell"
         }
       ]
+    },
+    {
+      "begin": "(?><<[-~](\"?)((?:[_\\w]+_|)SHELL)\\b\\1)",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.ruby"
+        }
+      },
+      "contentName": "meta.embedded.shell",
+      "end": "\\s*\\2$\\n?",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.ruby"
+        }
+      },
+      "name": "meta.embedded.block",
+      "patterns": [
+        {
+          "include": "source.shell"
+        }
+      ]
     }
   ]
 }
