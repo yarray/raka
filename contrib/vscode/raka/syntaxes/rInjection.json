@@ -1,0 +1,75 @@
+{
+  "scopeName": "raka-r.injection",
+  "injectionSelector": "L:source.ruby",
+  "patterns": [
+    {
+      "begin": "r(\\*) (%\\()",
+      "end": "\\)",
+      "name": "meta.embedded.block",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.arithmetic.ruby"
+        },
+        "2": {
+          "name": "punctuation.definition.string.begin.ruby"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.ruby"
+        }
+      },
+      "contentName": "meta.embedded.r",
+      "patterns": [
+        {
+          "include": "source.r"
+        }
+      ]
+    },
+    {
+      "begin": "r(\\*) (\")",
+      "end": "\"",
+      "name": "meta.embedded.block",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.arithmetic.ruby"
+        },
+        "2": {
+          "name": "punctuation.definition.string.begin.ruby"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.ruby"
+        }
+      },
+      "contentName": "meta.embedded.r",
+      "patterns": [
+        {
+          "include": "source.r"
+        }
+      ]
+    },
+    {
+      "begin": "(?><<[-~](\"?)((?:[_\\w]+_|)R)\\b\\1)",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.begin.ruby"
+        }
+      },
+      "contentName": "meta.embedded.r",
+      "end": "\\s*\\2$\\n?",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.string.end.ruby"
+        }
+      },
+      "name": "meta.embedded.block",
+      "patterns": [
+        {
+          "include": "source.r"
+        }
+      ]
+    }
+  ]
+}

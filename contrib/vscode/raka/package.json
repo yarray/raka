@@ -60,6 +60,16 @@
         }
       },
       {
+        "path": "./syntaxes/rInjection.json",
+        "scopeName": "raka-r.injection",
+        "injectTo": [
+          "source.ruby"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.shell": "r"
+        }
+      },
+      {
         "path": "./syntaxes/varInjection.json",
         "scopeName": "raka-var.injection",
         "injectTo": [
