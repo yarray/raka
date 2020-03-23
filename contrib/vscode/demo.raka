@@ -24,7 +24,25 @@ csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%
     echo $(scope).$(stem)
     touch $@
 )
-#
+
+csv.sql = psql* "SELECT * FROM abc WHERE k = 1;"
+
+csv.py = py* %(
+  def func(a):
+    print("#{work} %{building} $(stem)")
+)
+
+csv.py_block = py do |t|
+  <<-PYTHON
+  def func(a):
+    print("#{t.stem} %{building} $(stem)")
+  PYTHON
+end
+
+csv.r = r* %(
+  a <- "#{test}"
+  b <- func.test(%{building})
+)
 # _.fact.func['percent_(\S+)'] = r %(
 #     sql_input('SELECT timespot, %{func0}/total::float FROM $^', #{RCONN_ARGS}) | csv_output($@)
 # )
