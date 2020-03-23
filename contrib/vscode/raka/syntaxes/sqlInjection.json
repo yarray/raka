@@ -1,0 +1,20 @@
+{
+  "injectionSelector": "L:string.quoted.other.interpolated.ruby",
+  "patterns": [
+    {
+      "begin": "( *--sql| *--beginsql| *--begin-sql)",
+      "end": "( *;| *--endsql| *--end-sql)",
+      "captures": {
+        "1": {
+          "name": "variable.parameter"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.sql"
+        }
+      ]
+    }
+  ],
+  "scopeName": "raka-sql.injection"
+}

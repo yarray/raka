@@ -1,0 +1,15 @@
+{
+  "scopeName": "raka-shell.injection",
+  "injectionSelector": "L:string.quoted.other.interpolated.ruby",
+  "patterns": [
+    {
+      "begin": "(# shell)",
+      "end": "(# endshell)",
+      "patterns": [
+        {
+          "include": "source.shell"
+        }
+      ]
+    }
+  ]
+}

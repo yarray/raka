@@ -1,0 +1,15 @@
+{
+  "scopeName": "raka-python.injection",
+  "injectionSelector": "L:string.quoted.other.interpolated.ruby",
+  "patterns": [
+    {
+      "begin": "(# python)",
+      "end": "(# endpython)",
+      "patterns": [
+        {
+          "include": "source.python"
+        }
+      ]
+    }
+  ]
+}
