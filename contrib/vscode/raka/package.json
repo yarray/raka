@@ -30,8 +30,8 @@
         "path": "./syntaxes/ruby.tmLanguage.json"
       },
       {
-        "path": "./syntaxes/sqlInjection.json",
-        "scopeName": "raka-sql.injection",
+        "path": "./syntaxes/psqlInjection.json",
+        "scopeName": "raka-psql.injection",
         "injectTo": [
           "source.ruby"
         ],
@@ -50,14 +50,21 @@
         }
       },
       {
-        "path": "./syntaxes/ruby.tmLanguage.json",
-        "scopeName": "string.unquoted.other.ruby",
+        "path": "./syntaxes/shellInjection.json",
+        "scopeName": "raka-shell.injection",
         "injectTo": [
-          "raka-python.injection"
+          "source.ruby"
         ],
         "embeddedLanguages": {
-          "meta.embedded.python": "ruby"
+          "meta.embedded.shell": "shell"
         }
+      },
+      {
+        "path": "./syntaxes/varInjection.json",
+        "scopeName": "raka-var.injection",
+        "injectTo": [
+          "source.ruby"
+        ]
       }
     ]
   }

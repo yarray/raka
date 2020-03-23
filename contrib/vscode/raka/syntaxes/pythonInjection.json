@@ -4,18 +4,19 @@
   "patterns": [
     {
       "begin": "py(\\*) (%\\()",
-      "end": "(\\))",
+      "end": "\\)",
+      "name": "meta.embedded.block",
       "beginCaptures": {
         "1": {
           "name": "keyword.operator.arithmetic.ruby"
         },
         "2": {
-					"name": "punctuation.definition.string.begin.ruby"
-				}
+          "name": "punctuation.definition.string.begin.ruby"
+        }
       },
       "endCaptures": {
-        "1": {
-					"name": "punctuation.definition.string.end.ruby"
+        "0": {
+          "name": "punctuation.definition.string.end.ruby"
         }
       },
       "contentName": "meta.embedded.python",
@@ -24,6 +25,27 @@
           "include": "source.python"
         }
       ]
-    }
+    },
+    {
+					"begin": "(?><<[-~](\"?)((?:[_\\w]+_|)PYTHON)\\b\\1)",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.begin.ruby"
+						}
+					},
+					"contentName": "meta.embedded.python",
+					"end": "\\s*\\2$\\n?",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.string.end.ruby"
+						}
+					},
+					"name": "meta.embedded.block",
+					"patterns": [
+						{
+							"include": "source.python"
+						}
+					]
+			}
   ]
 }

@@ -1,0 +1,10 @@
+{
+    "scopeName": "tooo.injection",
+    "injectionSelector": "L:source.ruby",
+    "patterns": [
+      {
+        "match": "tooo",
+        "name": "keyword.tooo"
+      }
+    ]
+  }

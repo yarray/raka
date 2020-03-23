@@ -1,9 +1,9 @@
 {
-  "scopeName": "raka-shell.injection",
+  "scopeName": "raka-psql.injection",
   "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "shell(\\*) (%\\()",
+      "begin": "psql(\\*) (%\\()",
       "end": "\\)",
       "name": "meta.embedded.block",
       "beginCaptures": {
@@ -19,15 +19,15 @@
           "name": "punctuation.definition.string.end.ruby"
         }
       },
-      "contentName": "meta.embedded.shell",
+      "contentName": "meta.embedded.sql",
       "patterns": [
         {
-          "include": "source.shell"
+          "include": "source.sql"
         }
       ]
     },
     {
-      "begin": "shell(\\*) (\")",
+      "begin": "psql(\\*) (\")",
       "end": "\"",
       "name": "meta.embedded.block",
       "beginCaptures": {
@@ -43,10 +43,10 @@
           "name": "punctuation.definition.string.end.ruby"
         }
       },
-      "contentName": "meta.embedded.shell",
+      "contentName": "meta.embedded.sql",
       "patterns": [
         {
-          "include": "source.shell"
+          "include": "source.sql"
         }
       ]
     }
