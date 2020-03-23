@@ -3,14 +3,14 @@
   "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "r(\\*) (%\\()",
+      "begin": "r(\\(.*\\))?(\\*) (%\\()",
       "end": "\\)",
       "name": "meta.embedded.block",
       "beginCaptures": {
-        "1": {
+        "2": {
           "name": "keyword.operator.arithmetic.ruby"
         },
-        "2": {
+        "3": {
           "name": "punctuation.definition.string.begin.ruby"
         }
       },
@@ -27,14 +27,14 @@
       ]
     },
     {
-      "begin": "r(\\*) (\")",
+      "begin": "r(\\(.*\\))?(\\*) (\")",
       "end": "\"",
       "name": "meta.embedded.block",
       "beginCaptures": {
-        "1": {
+        "2": {
           "name": "keyword.operator.arithmetic.ruby"
         },
-        "2": {
+        "3": {
           "name": "punctuation.definition.string.begin.ruby"
         }
       },

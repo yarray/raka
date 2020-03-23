@@ -8,12 +8,13 @@ table.year_timespots = shell* 'echo $@ && touch $@'
 
 dsl.scopes :de
 
-csv.year_timespots.round = shell('~')* 'echo $PWD' + shell* 'touch $@'
-csv.compound_building.year.geom = ['round__year_timespots.csv'] | shell* 'touch $@'
+csv.year_timespots.round = shell('~')* "echo $PWD" + shell* "touch $@"
+
+csv.compound_building.year.geom = ['round__year_timespots.csv'] | shell* "touch $@"
 
 dsl.scopes :bw_de, :de
 
-csv.simple_building = shell* 'echo $(scope) 8080 && touch $@'
+csv.simple_building = shell* "echo $(scope) 8080 && touch $@"
 csv.simple_building.year = [] | shell do |t|
     "echo #{t.scope.capitalize} && touch #{t.name}"
 end
@@ -39,7 +40,7 @@ csv.py_block = py do |t|
   PYTHON
 end
 
-csv.r = r* %(
+csv.r = r(:graph)* %(
   a <- "#{test}"
   b <- func.test(%{building})
 )
