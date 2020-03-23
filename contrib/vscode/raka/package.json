@@ -1,41 +1,64 @@
 {
-    "name": "raka",
-    "displayName": "Raka",
-    "description": "Language Support for Raka (Rake for Data)",
-    "version": "0.0.1",
-    "engines": {
-        "vscode": "^1.43.0"
-    },
-    "categories": [
-        "Programming Languages"
+  "name": "raka",
+  "displayName": "Raka",
+  "description": "Language Support for Raka (Rake for Data)",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.43.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "raka",
+        "aliases": [
+          "Raka",
+          "raka"
+        ],
+        "extensions": [
+          "raka"
+        ],
+        "configuration": "./language-configuration.json"
+      }
     ],
-    "contributes": {
-        "languages": [{
-            "id": "raka",
-            "aliases": ["Raka", "raka"],
-            "extensions": ["raka"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "raka",
-            "scopeName": "source.ruby",
-            "path": "./syntaxes/ruby.tmLanguage.json"
-        },
-        {
-            "path": "./syntaxes/sqlInjection.json",
-            "scopeName": "raka-sql.injection",
-            "injectTo": ["source.ruby"],
-            "embeddedLanguages": {
-                "meta.embedded.sql": "sql"
-            }
-        },
-        {
-            "path": "./syntaxes/pythonInjection.json",
-            "scopeName": "raka-python.injection",
-            "injectTo": ["source.ruby"],
-            "embeddedLanguages": {
-                "meta.embedded.python": "python"
-            }
-        }]
-    }
+    "grammars": [
+      {
+        "language": "raka",
+        "scopeName": "source.ruby",
+        "path": "./syntaxes/ruby.tmLanguage.json"
+      },
+      {
+        "path": "./syntaxes/sqlInjection.json",
+        "scopeName": "raka-sql.injection",
+        "injectTo": [
+          "source.ruby"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.sql": "sql"
+        }
+      },
+      {
+        "path": "./syntaxes/pythonInjection.json",
+        "scopeName": "raka-python.injection",
+        "injectTo": [
+          "source.ruby"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.python": "python"
+        }
+      },
+      {
+        "path": "./syntaxes/ruby.tmLanguage.json",
+        "scopeName": "string.unquoted.other.ruby",
+        "injectTo": [
+          "raka-python.injection"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.python": "ruby"
+        }
+      }
+    ]
+  }
 }

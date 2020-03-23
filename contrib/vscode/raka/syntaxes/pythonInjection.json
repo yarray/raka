@@ -1,10 +1,24 @@
 {
   "scopeName": "raka-python.injection",
-  "injectionSelector": "L:string.quoted.other.interpolated.ruby",
+  "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "(# python)",
-      "end": "(# endpython)",
+      "begin": "py(\\*) (%\\()",
+      "end": "(\\))",
+      "beginCaptures": {
+        "1": {
+          "name": "keyword.operator.arithmetic.ruby"
+        },
+        "2": {
+					"name": "punctuation.definition.string.begin.ruby"
+				}
+      },
+      "endCaptures": {
+        "1": {
+					"name": "punctuation.definition.string.end.ruby"
+        }
+      },
+      "contentName": "meta.embedded.python",
       "patterns": [
         {
           "include": "source.python"
