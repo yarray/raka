@@ -1,0 +1,13 @@
+require 'raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+dsl.scope :class1 do
+    txt.test = run do |task|
+        puts task.scope
+    end
+end
+
+# task :apple do
+#   puts "Eat more apples!"
+#

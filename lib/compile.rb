@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'fileutils'
+
 require_relative './token'
 
 # compiles rule (lhs = rhs) to rake task
@@ -73,6 +75,9 @@ class DSLCompiler
       next if actions.empty?
 
       task = dsl_task(task)
+      if !task.scope.empty?
+        FileUtils.makedirs(task.scope)
+      end
       args = captures(pattern, task.name)
       actions.each do |action|
         action.call @env, task do |code|

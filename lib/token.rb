@@ -16,6 +16,9 @@ class Token
     # xxx? is for minimal match
     info = %r{^((?<scope>\S+)/)*(?<stem>(\S+))(?<ext>\.[^\.]+)$}.match(output)
     res = Hash[info.names.zip(info.captures)]
+    if !info[:scope].nil?
+      info[:scope].chomp! '/'
+    end
     name_details = /^(\S+?)__(\S+)$/.match(info[:stem])
     res = if name_details
             res.merge(func: name_details[1], input_stem: name_details[2])
@@ -78,8 +81,14 @@ class Token
   end
 
   def pattern
+    # generate all possible combinations of layers of scopes
+    flatten_scopes = @context.scopes[0].product(*@context.scopes[1..-1]).map { |l| l.join('/') }
     # scopes as leading
-    leading = @context.scopes.empty? ? '' : "(#{@context.scopes.join '|'})/"
+    if flatten_scopes.empty?
+      leading = ''
+    else
+      leading = "(#{flatten_scopes.join '|'})/"
+    end
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
