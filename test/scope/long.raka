@@ -1,8 +1,9 @@
+
 require 'raka'
 
 dsl = Raka.new(self, output_types: [:txt])
 
-dsl.scope :class1 do
+dsl.scope 'class1/topic/aspect' do
     txt.test = run do |task|
         puts task.scope
     end

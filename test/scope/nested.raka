@@ -1,0 +1,11 @@
+require 'raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+dsl.scope :out do
+    dsl.scope 'class1/subclass1' do
+      txt.test = run do |task|
+          puts task.scope
+      end
+    end
+end
