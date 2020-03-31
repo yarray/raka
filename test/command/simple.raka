@@ -1,6 +1,6 @@
-require '../../src/dsl.rb'
+require 'raka'
 
-dsl = DSL.new(self, output_types: [:txt])
+dsl = Raka.new(self, output_types: [:txt])
 
 txt.test = run do |task|
     puts task.name

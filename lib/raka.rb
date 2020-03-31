@@ -3,7 +3,7 @@ require_relative './protocol'
 require_relative './token'
 
 # initialize raka
-class DSL
+class Raka
   def initialize(env, options)
     @env = env
 
