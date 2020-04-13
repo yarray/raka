@@ -85,9 +85,9 @@ class Token
     flatten_scopes = @context.scopes[0].product(*@context.scopes[1..-1]).map { |l| l.join('/') }
     # scopes as leading
     if flatten_scopes.empty?
-      leading = ''
+      leading = '((?:\S+/)*)'
     else
-      leading = "(#{flatten_scopes.join '|'})/"
+      leading = '((?:\S+/*)' + "#{flatten_scopes.join '|'})/"
     end
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')

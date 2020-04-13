@@ -1,10 +1,15 @@
-
 require 'raka'
+require_relative '../helper'
 
 dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope 'class1/topic/aspect' do
     txt.test = run do |task|
-        puts task.scope
+        File.write(task.name, task.scope)
     end
+end
+
+# rake task
+task default: '_out/class1/topic/aspect/test.txt' do |t|
+    test_file t.prerequisites.first, '_out/class1/topic/aspect'
 end
