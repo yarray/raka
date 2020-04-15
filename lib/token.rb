@@ -81,14 +81,10 @@ class Token
   end
 
   def pattern
-    # generate all possible combinations of layers of scopes
-    flatten_scopes = @context.scopes[0].product(*@context.scopes[1..-1]).map { |l| l.join('/') }
     # scopes as leading
-    if flatten_scopes.empty?
-      leading = '((?:\S+/)*)'
-    else
-      leading = '((?:\S+/*)' + "#{flatten_scopes.join '|'})/"
-    end
+    leading = '(((?:\S+/)?)' +
+      (@context.scopes.map {|layer| "(#{layer.join('|')})/" }).join() +
+      ')'
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end

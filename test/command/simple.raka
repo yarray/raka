@@ -1,11 +1,12 @@
-require 'raka'
-
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test = run do |task|
-    puts task.name
+    File.write(task.name, 'Hello World')
 end
 
-# task :apple do
-#   puts "Eat more apples!"
-# end
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal File.read(t.prerequisites[1]).chomp, 'Hello World'
+    end
+end

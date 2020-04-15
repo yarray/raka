@@ -1,10 +1,16 @@
 
-require 'raka'
-
 dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope :class1, :class2 do
     txt.test = run do |task|
-        puts task.scope
+        File.write(task.name, task.scope)
+    end
+end
+
+# rake task
+task :default, [:ctx] => ['_out/class1/test.txt', '_out/class2/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal File.read(t.prerequisites[1]), '_out/class1'
+        assert_equal File.read(t.prerequisites[2]), '_out/class2'
     end
 end

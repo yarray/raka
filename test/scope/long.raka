@@ -1,6 +1,3 @@
-require 'raka'
-require_relative '../helper'
-
 dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope 'class1/topic/aspect' do
@@ -10,6 +7,8 @@ dsl.scope 'class1/topic/aspect' do
 end
 
 # rake task
-task default: '_out/class1/topic/aspect/test.txt' do |t|
-    test_file t.prerequisites.first, '_out/class1/topic/aspect'
+task :default, [:ctx] => ['_out/class1/topic/aspect/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal File.read(t.prerequisites[1]), '_out/class1/topic/aspect'
+    end
 end
