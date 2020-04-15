@@ -70,14 +70,15 @@ class Token
   end
 
   # TODO: no @var used, bad smell
-  def inputs(output, ext, scoped = true)
+  def inputs(output, ext)
     # no input
     return [] if @chain.length == 1
 
     # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
     info = Token.parse_output(output)
     input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
-    [scoped && info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
+    puts [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
+    [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
   end
 
   def pattern

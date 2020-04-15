@@ -7,8 +7,9 @@ class Raka
   def initialize(env, options)
     @env = env
 
-    defaults = { output_types: [:csv], input_types: [:csv], scopes: nil }
+    defaults = { output_types: [:csv], input_types: [], scopes: nil }
     @options = options = OpenStruct.new(defaults.merge(options))
+    options.input_types |= options.output_types  # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.nil? ? [] : [options.scopes]
 

@@ -134,11 +134,9 @@ class DSLCompiler
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
       get_inputs = proc { |output| lhs.inputs(output, ext) }
-      get_inputs_unscoped = proc { |output| lhs.inputs(output, ext, false) }
 
       # We find auto source from both THE scope and the root
       create_rule lhs.pattern, get_inputs, actions, extra_deps, extra_tasks
-      create_rule lhs.pattern, get_inputs_unscoped, actions, extra_deps, extra_tasks
     end
   end
 end

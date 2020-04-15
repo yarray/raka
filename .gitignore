@@ -4,8 +4,5 @@ tags
 .*~
 demo/**/*.csv
 demo/**/*.table
-test/**/*.csv
-test/**/*.table
-test/**/*.txt
-test/**/*.expected
+_out/
 pkg/

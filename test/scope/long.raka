@@ -9,6 +9,6 @@ end
 # rake task
 task :default, [:ctx] => ['_out/class1/topic/aspect/test.txt'] do |t, args|
     args.ctx.add_test do
-        assert_equal File.read(t.prerequisites[1]), '_out/class1/topic/aspect'
+        assert_equal '_out/class1/topic/aspect', File.read(t.prerequisites[1])
     end
 end

@@ -1,12 +1,16 @@
 dsl = Raka.new(self, output_types: [:txt])
 
+txt.test.stat = run do |task|
+    File.write(task.name, task.scope)
+end
+
 dsl.scope :class1 do
     txt.test = run do |task|
         File.write(task.name, task.scope)
     end
 end
 
-task :default, [:ctx] => ['_out/class1/test.txt'] do |t, args|
+task :default, [:ctx] => ['_out/class1/stat__test.txt'] do |t, args|
     args.ctx.add_test do
         assert_equal '_out/class1', File.read(t.prerequisites[1])
     end
