@@ -26,17 +26,13 @@ class DSLCompiler
     end
     output_info = token.parse_output name
     OpenStruct.new(
-      scope: output_info.scope,
-      stem: output_info.stem,
-      func: output_info.func,
-      input_stem: output_info.input_stem,
-      ext: output_info.ext,
-      name: name,
-      deps: deps,
-      deps_str: deps.join(','),
-      dep: deps.first || '',
-      task: task,
-      captures: output_info.captures
+      output_info.to_h.merge({
+        name: name,
+        deps: deps,
+        deps_str: deps.join(','),
+        dep: deps.first || '',
+        task: task
+      })
     )
   end
 

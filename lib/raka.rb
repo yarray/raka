@@ -21,7 +21,8 @@ class Raka
         # Here the compiler are bound with @options so that when we change @options
         # using methods like scope in Rakefile, the subsequent rules defined will honor
         # the new settings
-        Token.new DSLCompiler.new(env, options), Context.new(ext, scopes), []
+        # clone to fix the scopes when defining rule
+        Token.new DSLCompiler.new(env, options), Context.new(ext, scopes.clone), []
       end
     end
   end

@@ -24,6 +24,10 @@ class Token
     res = Hash[info.names.zip(info.captures)]
     if !info[:scope].nil?
       info[:scope].chomp! '/'
+      scopes = Regexp.new(scope_pattern).match(info[:scope]).captures
+      scopes[1..].each_with_index do |scope, i|
+        res["scope#{scopes.length - 1 - i - 1}"] = scope
+      end
     end
     name_details = /^(\S+?)__(\S+)$/.match(info[:stem])
     res = if name_details
@@ -84,19 +88,18 @@ class Token
     # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
     info = parse_output(output)
     input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
-    puts [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
     [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
   end
 
   def scope_pattern
-    '(((?:\S+/)?)' +
-      (@context.scopes.map {|layer| "(#{layer.join('|')})/" }).join() +
+    '((?:(\S+)/)?' +
+      (@context.scopes.map {|layer| "(#{layer.join('|')})" }).join('/') +
       ')'
   end
 
   def pattern
     # scopes as leading
-    leading = scope_pattern
+    leading = @context.scopes.length > 0 ? scope_pattern + '/' : scope_pattern
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
