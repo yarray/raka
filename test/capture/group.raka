@@ -1,0 +1,12 @@
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test['hello_(\d+)_(\S+)'] = run do |task|
+    File.write(task.name, task.captures.test + ',' + task.captures.test0 + ',' + task.captures.test1)
+end
+
+# rake task
+task :default, [:ctx] => ['_out/hello_42_world.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal File.read(t.prerequisites[0]), 'hello_42_world,42,world'
+    end
+end

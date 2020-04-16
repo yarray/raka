@@ -81,11 +81,15 @@ class Token
     [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
   end
 
-  def pattern
-    # scopes as leading
-    leading = '(((?:\S+/)?)' +
+  def scope_pattern
+    '(((?:\S+/)?)' +
       (@context.scopes.map {|layer| "(#{layer.join('|')})/" }).join() +
       ')'
+  end
+
+  def pattern
+    # scopes as leading
+    leading = scope_pattern
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end

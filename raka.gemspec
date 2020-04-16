@@ -43,9 +43,6 @@ Gem::Specification.new do |s|
     s.add_development_dependency(%q<juwelier>.freeze, ["~> 2.1.0"])
     s.add_development_dependency(%q<rake>.freeze, ["~> 13.0.0"])
   else
-    s.add_dependency(%q<rdoc>.freeze, ["~> 3.12"])
-    s.add_dependency(%q<bundler>.freeze, ["~> 2.1.0"])
-    s.add_dependency(%q<juwelier>.freeze, ["~> 2.1.0"])
     s.add_dependency(%q<rake>.freeze, ["~> 13.0.0"])
   end
 end

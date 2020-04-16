@@ -1,11 +1,15 @@
-require 'raka'
-
 dsl = Raka.new(self, output_types: [:txt])
 
-dsl.scope :out do
-    dsl.scope 'class1/subclass1' do
+dsl.scope :class1 do
+    dsl.scope 'subclass1/aspect1' do
       txt.test = run do |task|
           puts task.scope
       end
+    end
+end
+
+task :default, [:ctx] => ['_out/class1/subclass1/aspect1/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 1, 2
     end
 end

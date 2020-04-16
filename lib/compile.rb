@@ -14,7 +14,7 @@ class DSLCompiler
 
   # task is rake's task pushed into blocks
   # offer two shapes: name only and full task to unify argument resolving
-  def dsl_task(task)
+  def dsl_task(task, args)
     if task.respond_to? :name
       name = task.name
       deps = task.prerequisites
@@ -33,16 +33,17 @@ class DSLCompiler
       deps: deps,
       deps_str: deps.join(','),
       dep: deps.first || '',
-      task: task
+      task: task,
+      captures: OpenStruct.new(args)
     )
   end
 
-  def resolve(target, task, args = {})
+  def resolve(target, task)
     # convert target to text whether it is expression or already text
     text = target.respond_to?(:template) ? target.template(task.scope).to_s : target.to_s
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
-    args = Hash[(0...task.deps.size).zip task.deps].merge args
+    args = Hash[(0...task.deps.size).zip task.deps].merge task.captures.to_h
 
     # gsub refer ith dependency as $i
     text
@@ -62,32 +63,33 @@ class DSLCompiler
   end
 
   # build one rule
-  def create_rule(pattern, get_inputs, actions, extra_deps, extra_tasks)
+  def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
     # the "rule" method is private, maybe here are better choices
-    @env.send(:rule, pattern => [proc do |target|
+    @env.send(:rule, lhs.pattern => [proc do |target|
       inputs = get_inputs.call target
       extra_deps = extra_deps.map do |templ|
-        resolve(templ, dsl_task(target), captures(pattern, target))
+        args = captures(lhs.pattern, task.name)
+        resolve(templ, dsl_task(target, args))
       end
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
       next if actions.empty?
 
-      task = dsl_task(task)
+      args = captures(lhs.pattern, task.name)
+      task = dsl_task(task, args)
       if !task.scope.empty?
         FileUtils.makedirs(task.scope)
       end
-      args = captures(pattern, task.name)
       actions.each do |action|
         action.call @env, task do |code|
-          resolve(code, task, args)
+          resolve(code, task)
         end
       end
 
       extra_tasks.each do |templ|
-        puts resolve(templ, task, args)
-        Rake::Task[resolve(templ, task, args)].invoke
+        puts resolve(templ, task)
+        Rake::Task[resolve(templ, task)].invoke
       end
     end
   end
@@ -127,7 +129,7 @@ class DSLCompiler
     end
 
     unless lhs.inputs?
-      create_rule lhs.pattern, proc { [] }, actions, extra_deps, extra_tasks
+      create_rule lhs, proc { [] }, actions, extra_deps, extra_tasks
       return
     end
 
@@ -136,7 +138,7 @@ class DSLCompiler
       get_inputs = proc { |output| lhs.inputs(output, ext) }
 
       # We find auto source from both THE scope and the root
-      create_rule lhs.pattern, get_inputs, actions, extra_deps, extra_tasks
+      create_rule lhs, get_inputs, actions, extra_deps, extra_tasks
     end
   end
 end
