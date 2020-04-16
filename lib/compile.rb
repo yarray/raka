@@ -73,7 +73,6 @@ class DSLCompiler
       next if actions.empty?
 
       task = dsl_task(lhs, task)
-      puts task.captures
       if !task.scope.empty?
         FileUtils.makedirs(task.scope)
       end
@@ -84,7 +83,6 @@ class DSLCompiler
       end
 
       extra_tasks.each do |templ|
-        puts resolve(templ, task)
         Rake::Task[resolve(templ, task)].invoke
       end
     end
