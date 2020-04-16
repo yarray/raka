@@ -14,15 +14,17 @@ class DSLCompiler
 
   # task is rake's task pushed into blocks
   # offer two shapes: name only and full task to unify argument resolving
-  def dsl_task(task, args)
+  def dsl_task(token, task)
+    # if rake task
     if task.respond_to? :name
       name = task.name
       deps = task.prerequisites
+    # if target
     else
       name = task
       deps = []
     end
-    output_info = Token.parse_output name
+    output_info = token.parse_output name
     OpenStruct.new(
       scope: output_info.scope,
       stem: output_info.stem,
@@ -34,7 +36,7 @@ class DSLCompiler
       deps_str: deps.join(','),
       dep: deps.first || '',
       task: task,
-      captures: OpenStruct.new(args)
+      captures: output_info.captures
     )
   end
 
@@ -56,11 +58,6 @@ class DSLCompiler
       .gsub(/\$(\d+)/, '%{\1}') % args
   end
 
-  def captures(pattern, target)
-    matched = pattern.match(target)
-    keys = matched.names.map(&:to_sym)
-    Hash[keys.zip(matched.captures)]
-  end
 
   # build one rule
   def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
@@ -68,16 +65,15 @@ class DSLCompiler
     @env.send(:rule, lhs.pattern => [proc do |target|
       inputs = get_inputs.call target
       extra_deps = extra_deps.map do |templ|
-        args = captures(lhs.pattern, task.name)
-        resolve(templ, dsl_task(target, args))
+        resolve(templ, lhs.parse_output(target).captures)
       end
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
       next if actions.empty?
 
-      args = captures(lhs.pattern, task.name)
-      task = dsl_task(task, args)
+      task = dsl_task(lhs, task)
+      puts task.captures
       if !task.scope.empty?
         FileUtils.makedirs(task.scope)
       end

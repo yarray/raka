@@ -12,7 +12,13 @@ end
 class Token
   attr_reader :chain
 
-  def self.parse_output(output)
+  def captures(target)
+    matched = pattern.match(target)
+    keys = matched.names.map(&:to_sym)
+    Hash[keys.zip(matched.captures)]
+  end
+
+  def parse_output(output)
     # xxx? is for minimal match
     info = %r{^((?<scope>\S+)/)*(?<stem>(\S+))(?<ext>\.[^\.]+)$}.match(output)
     res = Hash[info.names.zip(info.captures)]
@@ -25,6 +31,7 @@ class Token
           else
             res.merge(func: nil, input_stem: nil)
           end
+    res = res.merge(captures: OpenStruct.new(captures(output)))
     OpenStruct.new res
   end
 
@@ -75,7 +82,7 @@ class Token
     return [] if @chain.length == 1
 
     # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
-    info = Token.parse_output(output)
+    info = parse_output(output)
     input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
     puts [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
     [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
