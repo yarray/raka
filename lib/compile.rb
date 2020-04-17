@@ -35,9 +35,12 @@ class DSLCompiler
     text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
     text
       .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
+      .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
       .gsub('$(stem)', info.stem)
       .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
       .gsub('$@', info.name)
+      .gsub(/\$\(scope(\d+)\)/, '%{scope\1}')
+      .gsub(/\$\(output_scope(\d+)\)/, '%{output_scope\1}') % info.to_h % info.captures.to_h
   end
 
   # resolve auto variables with dsl task
@@ -46,13 +49,13 @@ class DSLCompiler
     text = resolve_by_output target
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
-    args = Hash[(0...task.deps.size).zip task.deps].merge task.captures.to_h
+    args = Hash[(0...task.deps.size).zip task.deps]
 
+    # convert $0, $1 to the universal shape of %{dep} as captures
     text
       .gsub('$^', task.deps_str)
       .gsub('$<', task.dep || '')
-      .gsub(/\$(\d+)/, '%{\1}') # convert $0, $1 to the universal shape of %{dep} as captures
-      % args
+      .gsub(/\$(\d+)/, '%{\1}') % args
   end
 
 

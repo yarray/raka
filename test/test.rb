@@ -21,7 +21,7 @@ class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
   all_samples = Dir.glob("**/*.raka")
-  # all_samples = ['scope/single.raka', 'scope/inline.raka']
+  # all_samples = ['scope/dep_resolve.raka']
   all_samples.each do |path|
     # change to absolute
     path = File.join(File.absolute_path(File.dirname(__FILE__)), path)

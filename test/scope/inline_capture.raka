@@ -1,0 +1,13 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt('topic_(\S+)_(\d+)').test = run do |task|
+    File.write(task.name, "#{task.output_scope},#{task.output_scope0},#{task.output_scope1}")
+end
+
+task :default, [:ctx] => ['_out/topic_ruby_42/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'topic_ruby_42,ruby,42', File.read(t.prerequisites[0]) 
+    end
+end

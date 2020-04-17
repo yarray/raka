@@ -1,0 +1,21 @@
+
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+dsl.scope :class1 do
+    txt('aspect(\d+)').test = [txt('$(scope0)_$(output_scope)').test('test_$(output_scope0)')] | run do |task|
+        File.write(task.name, task.dep)
+    end
+end
+
+dsl.scope 'class1_aspect42' do
+    txt.test_42 = run do |task|
+    end
+end
+
+task :default, [:ctx] => ['_out/class1/aspect42/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/class1/class1_aspect42/test_42.txt', File.read(t.prerequisites[0])
+    end
+end

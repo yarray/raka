@@ -12,11 +12,11 @@ end
 class Token
   attr_reader :chain
 
-  def initialize(compiler, context, chain, inline_scope_pattern)
+  def initialize(compiler, context, chain, inline_scope)
     @compiler = compiler
     @context = context
     @chain = chain
-    @inline_scope = inline_scope_pattern
+    @inline_scope = inline_scope
   end
 
   def _captures_(target)
@@ -35,10 +35,15 @@ class Token
     info = Regexp.new(out_pattern).match(output)
     res = Hash[info.names.zip(info.captures)]
     if !info[:scope].nil?
-      info[:scope].chomp! '/'
       scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
       scopes[1..].each_with_index do |scope, i|
         res["scope#{scopes.length - 1 - i - 1}"] = scope
+      end
+    end
+    if !@inline_scope.nil? and !info[:output_scope].nil?
+      segs = Regexp.new(@inline_scope).match(info[:output_scope]).captures
+      segs.each_with_index do |seg, i|
+        res["output_scope#{i}"] = seg
       end
     end
 

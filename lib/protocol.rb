@@ -197,7 +197,7 @@ class RubyP
 
   def call(_, task, &resolve)
     @block.call(task, &resolve)
-    `touch #{task.name}`
+    FileUtils.touch(task.name)
   end
 end
 

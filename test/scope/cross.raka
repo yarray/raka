@@ -8,7 +8,6 @@ end
 
 dsl.scope :topic, :comment do
     txt.test = run do |task|
-        `touch #{task.name}`
     end
 end
 
