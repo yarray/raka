@@ -1,0 +1,20 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+dsl.scope :class1 do
+    txt.test['test_(\d+)'] = [txt('base_%{test0}').test] | run do |task|
+        File.write(task.name, task.dep)
+    end
+end
+
+dsl.scope 'base_42' do
+    txt.test = run do |task|
+    end
+end
+
+task :default, [:ctx] => ['_out/class1/test_42.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/class1/base_42/test.txt', File.read(t.prerequisites[0])
+    end
+end

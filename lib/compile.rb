@@ -40,7 +40,7 @@ class DSLCompiler
       .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
       .gsub('$@', info.name)
       .gsub(/\$\(scope(\d+)\)/, '%{scope\1}')
-      .gsub(/\$\(output_scope(\d+)\)/, '%{output_scope\1}') % info.to_h % info.captures.to_h
+      .gsub(/\$\(output_scope(\d+)\)/, '%{output_scope\1}') % (info.to_h.merge info.captures.to_h)
   end
 
   # resolve auto variables with dsl task
