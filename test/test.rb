@@ -1,7 +1,6 @@
 require 'fileutils'
 require "test/unit"
 require 'rake'
-require 'raka'
 
 class TestContext
   def initialize
@@ -21,8 +20,8 @@ end
 class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
-  all_samples = Dir.glob("**/*.raka")
-  all_samples = ['scope/nested.raka']
+  # all_samples = Dir.glob("**/*.raka")
+  all_samples = ['scope/single.raka', 'scope/inline.raka']
   all_samples.each do |path|
     # change to absolute
     path = File.join(File.absolute_path(File.dirname(__FILE__)), path)
@@ -31,13 +30,13 @@ class RakaTest < Test::Unit::TestCase
       rake.add_import path
       rake.load_rakefile
       # a factory to wrap given block and use later
-      ctx = TestContext.new
-      rake['default'].invoke(ctx)
-      ctx.tests.each { |t| instance_eval(&t) }
-      # actual_file = `rake -f #{path}`.chomp
-      # assert_equal File.read(actual_file), File.read(actual_file + '.expected')
-
-      rake.clear
+      begin
+        ctx = TestContext.new
+        rake['default'].invoke(ctx)
+        ctx.tests.each { |t| instance_eval(&t) }
+      ensure
+        rake.clear
+      end
     end
   end
 

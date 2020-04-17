@@ -24,7 +24,7 @@ class DSLCompiler
       name = task
       deps = []
     end
-    output_info = token.parse_output name
+    output_info = token._parse_output_ name
     OpenStruct.new(
       output_info.to_h.merge({
         name: name,
@@ -58,10 +58,10 @@ class DSLCompiler
   # build one rule
   def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
     # the "rule" method is private, maybe here are better choices
-    @env.send(:rule, lhs.pattern => [proc do |target|
+    @env.send(:rule, lhs._pattern_ => [proc do |target|
       inputs = get_inputs.call target
       extra_deps = extra_deps.map do |templ|
-        resolve(templ, lhs.parse_output(target).captures)
+        resolve(templ, lhs._parse_output_(target).captures)
       end
       # main data source and extra dependencies
       inputs + extra_deps
@@ -70,7 +70,11 @@ class DSLCompiler
 
       task = dsl_task(lhs, task)
       if !task.scope.empty?
-        FileUtils.makedirs(task.scope)
+        folder = task.scope
+        if !task.output_scope.empty?
+          folder = File.join(task.scope, task.output_scope)
+        end
+        FileUtils.makedirs(folder)
       end
       actions.each do |action|
         action.call @env, task do |code|
@@ -118,14 +122,14 @@ class DSLCompiler
       extra_tasks = []
     end
 
-    unless lhs.inputs?
+    unless lhs._input_?
       create_rule lhs, proc { [] }, actions, extra_deps, extra_tasks
       return
     end
 
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
-      get_inputs = proc { |output| lhs.inputs(output, ext) }
+      get_inputs = proc { |output| lhs._inputs_(output, ext) }
 
       # We find auto source from both THE scope and the root
       create_rule lhs, get_inputs, actions, extra_deps, extra_tasks

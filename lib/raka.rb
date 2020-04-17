@@ -17,12 +17,13 @@ class Raka
     # options.output_types = OutputType.parse_option(options.output_types || [:csv])
     # These are where the dsl starts
     options.output_types.each do |ext|
-      env.define_singleton_method ext do
+      env.define_singleton_method ext do |*args|
         # Here the compiler are bound with @options so that when we change @options
         # using methods like scope in Rakefile, the subsequent rules defined will honor
         # the new settings
         # clone to fix the scopes when defining rule
-        Token.new DSLCompiler.new(env, options), Context.new(ext, scopes.clone), []
+        inline_scope_pattern = args.length > 0 ? args[0] : nil
+        Token.new(DSLCompiler.new(env, options), Context.new(ext, scopes.clone), [], inline_scope_pattern)
       end
     end
   end

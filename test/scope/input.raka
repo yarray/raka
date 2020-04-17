@@ -1,3 +1,5 @@
+require '../lib/raka'
+
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test.stat = run do |task|

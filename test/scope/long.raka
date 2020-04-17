@@ -1,3 +1,5 @@
+require '../lib/raka'
+
 dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope 'class1/topic/aspect' do
