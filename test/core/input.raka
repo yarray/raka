@@ -1,0 +1,14 @@
+require '../lib/raka'
+
+txt.test.stat = run do |task|
+    File.write(task.name, 'Hello World')
+end
+
+txt.test = run do |task|
+end
+
+task :default, [:ctx] => ['_out/stat__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'Hello World', File.read(t.prerequisites[0])
+    end
+end

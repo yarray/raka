@@ -1,0 +1,23 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test.stat = [txt.test2, '_out/hello.txt'] | run do |task|
+    File.write(task.name, "#{task.dep},#{task.deps.length},#{task.deps[1]},#{task.deps[2]}")
+end
+
+txt.test = run do |task|
+end
+
+txt.test2 = run do |task|
+end
+
+file '_out/hello.txt' do |task|
+    FileUtils.touch task.name
+end
+
+task :default, [:ctx] => ['_out/stat__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/test.txt,3,_out/test2.txt,_out/hello.txt', File.read(t.prerequisites[0])
+    end
+end

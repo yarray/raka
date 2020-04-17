@@ -21,11 +21,10 @@ class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
   all_samples = Dir.glob("**/*.raka")
-  # all_samples = ['scope/dep_resolve.raka']
+  # all_samples = ['core/extra_dep.raka']
   all_samples.each do |path|
     # change to absolute
-    path = File.join(File.absolute_path(File.dirname(__FILE__)), path)
-    name = File.basename(path, File.extname(path))
+    name = File.dirname(path).gsub('/', '_') + '_' + File.basename(path, File.extname(path))
     define_method "test_#{name}" do
       rake.add_import path
       rake.load_rakefile

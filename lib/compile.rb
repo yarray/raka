@@ -46,7 +46,7 @@ class DSLCompiler
   # resolve auto variables with dsl task
   def resolve(target, task)
     # convert target to text whether it is expression or already text
-    text = resolve_by_output target
+    text = resolve_by_output target, task
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
     args = Hash[(0...task.deps.size).zip task.deps]

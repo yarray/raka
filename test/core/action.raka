@@ -1,0 +1,16 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test = [
+    Proc.new do |env, task, &resolve|
+        File.write(task.name, resolve.call('$(scope)', task))
+    end
+]
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out', File.read(t.prerequisites[0])
+    end
+end
