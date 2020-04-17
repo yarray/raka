@@ -16,7 +16,7 @@ class Token
     @compiler = compiler
     @context = context
     @chain = chain
-    @inline_scope_pattern = inline_scope_pattern
+    @inline_scope = inline_scope_pattern
   end
 
   def _captures_(target)
@@ -28,8 +28,8 @@ class Token
   def _parse_output_(output)
     # xxx? is for minimal match
     out_pattern = %r{^((?<scope>\S+)/)?}.source
-    if !@inline_scope_pattern.nil?
-      out_pattern += %r{(?<output_scope>#{@inline_scope_pattern})/}.source
+    if !@inline_scope.nil?
+      out_pattern += %r{(?<output_scope>#{@inline_scope})/}.source
     end
     out_pattern += %r{(?<stem>(\S+))(?<ext>\.[^\.]+)$}.source
     info = Regexp.new(out_pattern).match(output)
@@ -49,12 +49,13 @@ class Token
             res.merge(func: nil, input_stem: nil)
           end
     res = res.merge(captures: OpenStruct.new(_captures_(output)))
+    res[:name] = output
     OpenStruct.new res
   end
 
   # attach a new item to the chain
   def _attach_(item)
-    Token.new(@compiler, @context, @chain + [item], @inline_scope_pattern)
+    Token.new(@compiler, @context, @chain + [item], @inline_scope)
   end
 
   def method_missing(sym, *args)
@@ -108,15 +109,15 @@ class Token
   def _pattern_
     # scopes as leading
     leading = @context.scopes.length > 0 ? _scope_pattern_ + '/' : _scope_pattern_
-    if !@inline_scope_pattern.nil?
-      leading += "(#{@inline_scope_pattern})/"
+    if !@inline_scope.nil?
+      leading += "(#{@inline_scope})/"
     end
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
 
   def _template_(scope=nil)
-    (scope ? scope + '/' : '') + @chain.reverse.join('__') + '.' + @context.ext.to_s
+    (scope.nil? ? '' : scope + '/') + (@inline_scope.nil? ? '' : @inline_scope + '/') + @chain.reverse.join('__') + '.' + @context.ext.to_s
   end
 
   # These two methods indicate that this is a pattern token

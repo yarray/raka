@@ -12,18 +12,11 @@ class DSLCompiler
     @options = options
   end
 
-  # task is rake's task pushed into blocks
-  # offer two shapes: name only and full task to unify argument resolving
+  # Raka task structure, input task is rake's task pushed into blocks
   def dsl_task(token, task)
-    # if rake task
-    if task.respond_to? :name
-      name = task.name
-      deps = task.prerequisites
-    # if target
-    else
-      name = task
-      deps = []
-    end
+    name = task.name
+    deps = task.prerequisites
+
     output_info = token._parse_output_ name
     OpenStruct.new(
       output_info.to_h.merge({
@@ -36,22 +29,30 @@ class DSLCompiler
     )
   end
 
+  # resolve auto variables with only output info, useful when resolve extra deps (task is not available yet)
+  def resolve_by_output(target, output_info)
+    info = output_info
+    text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
+    text
+      .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
+      .gsub('$(stem)', info.stem)
+      .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
+      .gsub('$@', info.name)
+  end
+
+  # resolve auto variables with dsl task
   def resolve(target, task)
     # convert target to text whether it is expression or already text
-    text = target.respond_to?(:template) ? target.template(task.scope).to_s : target.to_s
+    text = resolve_by_output target
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
     args = Hash[(0...task.deps.size).zip task.deps].merge task.captures.to_h
 
-    # gsub refer ith dependency as $i
     text
-      .gsub('$(scope)', task.scope || '')
-      .gsub('$(stem)', task.stem)
-      .gsub('$(input_stem)', task.input_stem || '')
-      .gsub('$@', task.name)
       .gsub('$^', task.deps_str)
       .gsub('$<', task.dep || '')
-      .gsub(/\$(\d+)/, '%{\1}') % args
+      .gsub(/\$(\d+)/, '%{\1}') # convert $0, $1 to the universal shape of %{dep} as captures
+      % args
   end
 
 
@@ -61,7 +62,7 @@ class DSLCompiler
     @env.send(:rule, lhs._pattern_ => [proc do |target|
       inputs = get_inputs.call target
       extra_deps = extra_deps.map do |templ|
-        resolve(templ, lhs._parse_output_(target).captures)
+        resolve_by_output(templ, lhs._parse_output_(target))
       end
       # main data source and extra dependencies
       inputs + extra_deps

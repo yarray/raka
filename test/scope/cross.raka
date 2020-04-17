@@ -1,0 +1,19 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt('user').test = [txt('topic').test, txt('comment').test] | run do |task|
+    File.write(task.name, "#{task.deps[0]},#{task.deps[1]},#{task.scope}")
+end
+
+dsl.scope :topic, :comment do
+    txt.test = run do |task|
+        `touch #{task.name}`
+    end
+end
+
+task :default, [:ctx] => ['_out/user/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/topic/test.txt,_out/comment/test.txt,_out', File.read(t.prerequisites[0]) 
+    end
+end
