@@ -29,7 +29,7 @@ class Token
     # xxx? is for minimal match
     out_pattern = %r{^((?<scope>\S+)/)?}.source
     if !@inline_scope_pattern.nil?
-      out_pattern += %r{(?<output_scope>(#{@inline_scope_pattern})/)}.source
+      out_pattern += %r{(?<output_scope>#{@inline_scope_pattern})/}.source
     end
     out_pattern += %r{(?<stem>(\S+))(?<ext>\.[^\.]+)$}.source
     info = Regexp.new(out_pattern).match(output)

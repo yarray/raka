@@ -69,9 +69,9 @@ class DSLCompiler
       next if actions.empty?
 
       task = dsl_task(lhs, task)
-      if !task.scope.empty?
+      if !task.scope.nil?
         folder = task.scope
-        if !task.output_scope.empty?
+        if !task.output_scope.nil?
           folder = File.join(task.scope, task.output_scope)
         end
         FileUtils.makedirs(folder)
