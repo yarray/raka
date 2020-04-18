@@ -1,0 +1,22 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt, :mod])
+
+txt.test = (run do |task|
+    File.write(task.name, '3, 2, 1, ')
+end) | [mod.hello, mod.world]
+
+mod.hello = run do |task|
+    File.write(File.join(task.scope, 'test.txt'), 'Hello ', mode: 'a')
+end
+
+mod.world = run do |task|
+    File.write(File.join(task.scope, 'test.txt'), 'World!!', mode: 'a')
+end
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '3, 2, 1, Hello World!!', File.read(t.prerequisites[0])
+    end
+end

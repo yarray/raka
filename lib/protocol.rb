@@ -201,7 +201,7 @@ class RubyP
   end
 end
 
-# use rb instead of "ruby" to avoid name collision
+# use run instead of "ruby" to avoid name collision
 def run(&block)
   [RubyP.new(&block)]
 end
