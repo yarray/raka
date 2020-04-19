@@ -21,7 +21,7 @@ class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
   all_samples = Dir.glob("**/*.raka")
-  # all_samples = ['scope/post.raka']
+  # all_samples = ['core/autovar.raka']
   all_samples.each do |path|
     # change to absolute
     name = File.dirname(path).gsub('/', '_') + '_' + File.basename(path, File.extname(path))

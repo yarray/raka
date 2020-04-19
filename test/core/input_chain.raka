@@ -2,14 +2,17 @@ require '../lib/raka'
 
 Raka.new(self, output_types: [:txt])
 
-txt.test.stat = run do |task|
+txt.test.geom.stat = run do |task|
     File.write(task.name, 'Hello World')
+end
+
+txt.test.geom = run do |task|
 end
 
 txt.test = run do |task|
 end
 
-task :default, [:ctx] => ['_out/stat__test.txt'] do |t, args|
+task :default, [:ctx] => ['_out/stat__geom__test.txt'] do |t, args|
     args.ctx.add_test do
         assert_equal 'Hello World', File.read(t.prerequisites[0])
     end

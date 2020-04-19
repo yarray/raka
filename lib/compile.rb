@@ -49,7 +49,7 @@ class DSLCompiler
     text = resolve_by_output target, task
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
-    args = Hash[(0...task.deps.size).zip task.deps]
+    args = Hash[((0...task.deps.size).map {|i| i.to_s.to_sym}).zip task.deps]
 
     # convert $0, $1 to the universal shape of %{dep} as captures
     text

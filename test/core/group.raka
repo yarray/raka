@@ -1,0 +1,17 @@
+require '../lib/raka'
+
+Raka.new(self, output_types: [:txt, :done])
+
+done.group1 = [txt.test1, txt.test2, txt.test3]
+
+txt._['test\d+'] = run do |task|
+  File.write(task.name, task.name)
+end
+
+task :default, [:ctx] => ['_out/group1.done'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/test1.txt', File.read('_out/test1.txt')
+        assert_equal '_out/test2.txt', File.read('_out/test2.txt')
+        assert_equal '_out/test3.txt', File.read('_out/test3.txt')
+    end
+end

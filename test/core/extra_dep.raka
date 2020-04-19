@@ -1,6 +1,6 @@
 require '../lib/raka'
 
-dsl = Raka.new(self, output_types: [:txt])
+Raka.new(self, output_types: [:txt])
 
 txt.test.stat = [txt.test2, '_out/hello.txt'] | run do |task|
     File.write(task.name, "#{task.dep},#{task.deps.length},#{task.deps[1]},#{task.deps[2]}")

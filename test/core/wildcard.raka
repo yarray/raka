@@ -1,0 +1,18 @@
+
+require '../lib/raka'
+
+Raka.new(self, output_types: [:txt])
+
+txt._.geom = run do |task|
+    File.write(task.name, 'geom of ' + task.input_stem)
+end
+
+txt.test = run do |task|
+end
+
+# rake task
+task :default, [:ctx] => ['_out/geom__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'geom of test', File.read(t.prerequisites[0])
+    end
+end
