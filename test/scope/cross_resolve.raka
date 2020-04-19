@@ -1,0 +1,18 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt('user').test['test_(\d+)_(\d+)'] = [txt('topic%{test0}').test, txt('group%{test1}').test] | run do |task|
+    File.write(task.name, "#{task.deps[0]},#{task.deps[1]}")
+end
+
+dsl.scope :topic42, :group11 do
+    txt.test = run do |task|
+    end
+end
+
+task :default, [:ctx] => ['_out/user/test_42_11.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/topic42/test.txt,_out/group11/test.txt', File.read(t.prerequisites[0]) 
+    end
+end

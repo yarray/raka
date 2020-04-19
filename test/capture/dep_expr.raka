@@ -1,0 +1,19 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test['test_(\d+)_(\d+)'] = [txt.test('test_%{test0}'), txt.test('test_%{test1}')] | run do |task|
+    File.write(task.name, "#{task.deps[0]},#{task.deps[1]}")
+end
+
+txt.test_42 = run do |task|
+end
+
+txt.test_11 = run do |task|
+end
+
+task :default, [:ctx] => ['_out/test_42_11.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '_out/test_42.txt,_out/test_11.txt', File.read(t.prerequisites[0]) 
+    end
+end

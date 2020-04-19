@@ -1,0 +1,22 @@
+require '../lib/raka'
+
+Raka.new(self, output_types: [:txt])
+
+txt._.stat = run do |task|
+    File.write(task.dep, ':stat', mode: 'a')
+end
+
+
+txt.test = run do |task|
+    File.write(task.name, 'test')
+end
+
+txt.test1 = run do |task|
+    File.write(task.name, 'test1')
+end
+
+task :default, [:ctx] => ['_out/stat__test1.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'test1:stat', File.read('_out/test1.txt')
+    end
+end
