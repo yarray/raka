@@ -69,24 +69,22 @@ class Token
     Token.new(@compiler, @context, @chain + [item], @inline_scope)
   end
 
+  # rubocop:disable Style/MissingRespondToMissing  # for DSL not essential
   def method_missing(sym, *args)
     # if ends with '=' then is to compile;
     # if not but has a arg then it is template token, push template;
     # else is inconclusive so just push symbol
+    super if internal(sym)
+
     if sym.to_s.end_with? '='
       @compiler.compile(_attach_(sym.to_s.chomp('=')), args.first)
     elsif !args.empty?
       _attach_ args.first.to_s
-    elsif !internal(sym)
-      _attach_ sym.to_s
     else
-      super
+      _attach_ sym.to_s
     end
   end
-
-  def respond_to_missing?(name, include_private = false)
-    internal(name) ? super : true
-  end
+  # rubocop:enable Style/MissingRespondToMissing
 
   # non capture matching anything
   def _(*args)
