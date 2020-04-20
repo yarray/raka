@@ -1,0 +1,21 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test.ind['\S+'].stat = [txt.aux, txt.aux2] | run do |task|
+    content = "#{task.name}:#{task.deps[0]}:#{task.deps[1]}:#{task.deps_str}:#{task.task.prerequisites[0]}:"
+    content += "#{task.stem}:#{task.input_stem}:#{task.func}:#{task.captures.ind}"
+    File.write(task.name, content)
+end
+
+txt._ = run do |task|
+end
+
+# rake task
+task :default, [:ctx] => ['_out/stat__geom__test.txt'] do |t, args|
+    args.ctx.add_test do
+        expected = '_out/stat__geom__test.txt:_out/geom__test.txt:_out/aux.txt:_out/geom__test.txt,_out/aux.txt,_out/aux2.txt:_out/geom__test.txt:'
+        expected += 'stat__geom__test:geom__test:stat:geom'
+        assert_equal expected, File.read(t.prerequisites[0])
+    end
+end

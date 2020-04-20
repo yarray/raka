@@ -3,7 +3,7 @@ require '../lib/raka'
 Raka.new(self, output_types: [:txt])
 
 txt._.stat = run do |task|
-    File.write(task.dep, ':stat', mode: 'a')
+    File.write(task.deps[0], ':stat', mode: 'a')
 end
 
 

@@ -3,7 +3,7 @@ require '../lib/raka'
 Raka.new(self, output_types: [:txt])
 
 txt.test.stat = [txt.test2, '_out/hello.txt'] | run do |task|
-    File.write(task.name, "#{task.dep},#{task.deps.length},#{task.deps[1]},#{task.deps[2]}")
+    File.write(task.name, "#{task.deps[0]},#{task.deps.length},#{task.deps[1]},#{task.deps[2]}")
 end
 
 txt.test = run do |task|

@@ -4,8 +4,12 @@ Metrics/LineLength:
 
 # Too short methods lead to extraction of single-use methods, which can make
 # the code easier to read (by naming things), but can also clutter the class
-Metrics/MethodLength: 
+Metrics/MethodLength:
   Max: 20
+
+Metrics/AbcSize:
+  # Enable: false
+  Max: 25
 
 Naming/BinaryOperatorParameterName:
   Enabled: false

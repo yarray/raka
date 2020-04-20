@@ -1,0 +1,20 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt], user_protocols: ['./protocol/custom'])
+
+txt.test.col['col_(\d+)'] = awk* '{s+=$%{col0}} END {print "We have "s" fruits"}'
+
+txt.test = run do |task|
+    content = <<-TEXT
+    apple 1
+    orange 2
+    banana 6
+    TEXT
+    File.write(task.name, content)
+end
+
+task :default, [:ctx] => ['_out/col_2__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'We have 9 fruits', File.read(t.prerequisites[0]).chomp
+    end
+end

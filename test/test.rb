@@ -1,27 +1,26 @@
+# frozen_string_literal: true
+
 require 'fileutils'
-require "test/unit"
+require 'test/unit'
 require 'rake'
 
 class TestContext
   def initialize
     @tests = []
   end
-  
+
   def add_test(&block)
     @tests.push block
   end
 
-  def tests
-    return @tests
-  end
+  attr_reader :tests
 end
-
 
 class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
-  all_samples = Dir.glob("**/*.raka")
-  # all_samples = ['capture/any.raka']
+  all_samples = Dir.glob('**/*.raka')
+  # all_samples = ['protocol/shell/block.raka']
   all_samples.each do |path|
     # change to absolute
     name = File.dirname(path).gsub('/', '_') + '_' + File.basename(path, File.extname(path))

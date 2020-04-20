@@ -6,3 +6,4 @@ demo/**/*.csv
 demo/**/*.table
 _out/
 pkg/
+.DS_Store

@@ -4,6 +4,10 @@ require 'fileutils'
 
 require_relative './token'
 
+def array_to_hash(a)
+  a.nil? ? {} : Hash[((0...a.size).map { |i| i.to_s.to_sym }).zip a]
+end
+
 # compiles rule (lhs = rhs) to rake task
 class DSLCompiler
   # keep env as running environment of rake since we want to inject rules
@@ -18,14 +22,15 @@ class DSLCompiler
     deps = task.prerequisites
 
     output_info = token._parse_output_ name
+    task_info = {
+      name: name,
+      deps: deps,
+      deps_str: deps.join(','),
+      input: deps.first || '',
+      task: task
+    }
     OpenStruct.new(
-      output_info.to_h.merge({
-        name: name,
-        deps: deps,
-        deps_str: deps.join(','),
-        dep: deps.first || '',
-        task: task
-      })
+      output_info.to_h.merge(task_info)
     )
   end
 
@@ -33,14 +38,18 @@ class DSLCompiler
   def resolve_by_output(target, output_info)
     info = output_info
     text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
+    text = text
+           .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
+           .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
+           .gsub('$(stem)', info.stem)
+           .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
+           .gsub('$@', info.name) % (info.to_h.merge info.captures.to_h)
+
+    text = text
+           .gsub(/\$\(scope(\d+)\)/, '%{\1}') % array_to_hash(info.scopes)
+
     text
-      .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
-      .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
-      .gsub('$(stem)', info.stem)
-      .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
-      .gsub('$@', info.name)
-      .gsub(/\$\(scope(\d+)\)/, '%{scope\1}')
-      .gsub(/\$\(output_scope(\d+)\)/, '%{output_scope\1}') % (info.to_h.merge info.captures.to_h)
+      .gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scopes)
   end
 
   # resolve auto variables with dsl task
@@ -49,15 +58,14 @@ class DSLCompiler
     text = resolve_by_output target, task
 
     # add numbered auto variables like $0, $2 referring to the first and third deps
-    args = Hash[((0...task.deps.size).map {|i| i.to_s.to_sym}).zip task.deps]
+    args = array_to_hash(task.deps)
 
     # convert $0, $1 to the universal shape of %{dep} as captures
     text
       .gsub('$^', task.deps_str)
-      .gsub('$<', task.dep || '')
-      .gsub(/\$(\d+)/, '%{\1}') % args
+      .gsub('$<', task.input || '')
+      .gsub(/\$\(dep(\d+)\)/, '%{\1}') % args
   end
-
 
   # build one rule
   def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
@@ -73,11 +81,9 @@ class DSLCompiler
       next if actions.empty?
 
       task = dsl_task(lhs, task)
-      if !task.scope.nil?
+      unless task.scope.nil?
         folder = task.scope
-        if !task.output_scope.nil?
-          folder = File.join(task.scope, task.output_scope)
-        end
+        folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
         FileUtils.makedirs(folder)
       end
       actions.each do |action|

@@ -4,7 +4,7 @@ Raka.new(self, output_types: [:txt])
 
 txt.test.stat = [txt.test1] | [
     Proc.new do |env, task, &resolve|
-        template = '$(stem):$(input_stem):$@:$^:$<:$1'
+        template = '$(stem):$(input_stem):$@:$^:$<:$(dep1)'
         File.write(task.name, resolve.call(template, task))
     end
 ]

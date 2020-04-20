@@ -5,7 +5,6 @@ dsl = Raka.new(self, output_types: [:txt])
 txt.test = [
     # this is rake task
     Proc.new do |env, task, &resolve|
-        puts resolve.call('$(stem)', task)
         File.write(task.name, resolve.call('$(stem)_aaa', task))
     end,
     # this is raka task

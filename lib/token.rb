@@ -36,15 +36,11 @@ class Token
     res = Hash[info.names.zip(info.captures)]
     if !info[:scope].nil?
       scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
-      scopes[1..].each_with_index do |scope, i|
-        res["scope#{scopes.length - 1 - i - 1}"] = scope
-      end
+      res[:scopes] = scopes[1..].reverse
     end
     if !@inline_scope.nil? and !info[:output_scope].nil?
       segs = Regexp.new(@inline_scope).match(info[:output_scope]).captures
-      segs.each_with_index do |seg, i|
-        res["output_scope#{i}"] = seg
-      end
+      res[:output_scopes] = segs
     end
 
     name_details = /^(\S+?)__(\S+)$/.match(info[:stem])

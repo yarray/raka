@@ -4,7 +4,7 @@ dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope :class1 do
     txt.test['test_(\d+)'] = [txt('base_%{test0}').test] | run do |task|
-        File.write(task.name, task.dep)
+        File.write(task.name, task.deps[0])
     end
 end
 

@@ -28,7 +28,7 @@ end
 # There are two methods to provide code to a language protocol, either a string literal
 # OR a ruby block. Cannot choose both.
 class LanguageProtocol
-  attr_writer :block
+  attr_accessor :block
 
   def create_tmp(content)
     tmpfile = "/tmp/#{SecureRandom.uuid}"
@@ -53,64 +53,17 @@ class LanguageProtocol
 
     throw 'No code to run' if code.nil?
 
-    puts code
-    script_text = build(remove_common_indent(code))
+    env.logger.debug code
+    script_text = build(remove_common_indent(code), task)
     run_script env, create_tmp(script_text), task
   end
 
   # template methods:
-  # build(code)
-  def build(code)
+  # build(code, task)
+  def build(code, _)
     code
   end
   # run_script(fname, task)
-end
-
-# r language protocol
-class R < LanguageProtocol
-  def initialize(src, libs = [])
-    @src = src
-    @libs = libs
-  end
-
-  def build(code)
-    libraries = ([
-      :pipeR
-    ] + @libs).map { |name| "suppressPackageStartupMessages(library(#{name}))" }
-
-    sources = ["source('#{File.dirname(__FILE__)}/io.R')"] +
-              (@src ? [@src] : []).map { |name| "source('#{SRC_DIR}/#{name}.R')" }
-
-    extra = [
-      '`|` <- `%>>%`',
-      "conn_args <- list(host='#{HOST}', user='#{USER}', dbname='#{DB}', port='#{PORT}')",
-      'args <- commandArgs(trailingOnly = T)',
-      'sql_input    <- init_sql_input(conn_args, args[1])',
-      'table_input  <- init_table_input(conn_args, args[1])',
-      'table_output <- init_table_output(conn_args, args[1])'
-    ]
-
-    [libraries, sources, extra, code].join "\n"
-  end
-
-  def run_script(env, fname, task)
-    env.send :sh, "Rscript #{fname} '#{task.scope || 'public'}'"
-  end
-end
-
-# shell(bash) protocol
-class Shell < LanguageProtocol
-  def initialize(base_dir = './')
-    @base_dir = base_dir
-  end
-
-  def build(code)
-    ["cd #{@base_dir}", 'set -e', code].join "\n"
-  end
-
-  def run_script(env, fname, _)
-    env.send :sh, "bash #{fname}"
-  end
 end
 
 # postgresql protocol using psql, requires HOST, PORT, USER, DB
@@ -125,7 +78,7 @@ class Psql < LanguageProtocol
     @options = options
   end
 
-  def build(code)
+  def build(code, _)
     if @options[:create].to_s == 'table'
       'DROP TABLE IF EXISTS :_name_;' \
         'CREATE TABLE :_name_ AS (' + code + ');'
@@ -180,9 +133,7 @@ class PsqlFile
   end
 end
 
-creator :shell, Shell
 creator :psql, Psql
-creator :r, R
 
 def psqlf(*args, &block)
   [PsqlFile.new(*args, &block)]

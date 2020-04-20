@@ -1,0 +1,15 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt.test = shell* %(
+    echo -n Hello World > $@
+    echo -n !!! >> $@
+)
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'Hello World!!!', File.read(t.prerequisites[0])
+    end
+end
