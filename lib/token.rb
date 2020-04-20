@@ -1,15 +1,24 @@
+# frozen_string_literal: true
+
 # Context to preserve during the token chaining
 class Context
   attr_reader :ext
   attr_reader :scopes
 
-  def initialize(ext, scopes=[])
+  def initialize(ext, scopes = [])
     @ext = ext
     @scopes = scopes
   end
 end
 
-# 
+# methods like _xx_ are preserved for token
+def internal(name)
+  name.length > 1 && name.to_s.start_with?('_') && name.to_s.end_with?('_')
+end
+
+# A raka expression is a list of linked tokens. The Token
+# class store current token, info of previous tokens, and context.
+# It plays rule of both token and expr
 class Token
   attr_reader :chain
 
@@ -26,20 +35,19 @@ class Token
     Hash[keys.zip(matched.captures)]
   end
 
+  # rubocop:disable Style/MethodLength # long but straightforward
   def _parse_output_(output)
     # xxx? is for minimal match
     out_pattern = %r{^((?<scope>\S+)/)?}.source
-    if !@inline_scope.nil?
-      out_pattern += %r{(?<output_scope>#{@inline_scope})/}.source
-    end
-    out_pattern += %r{(?<stem>(\S+))(?<ext>\.[^\.]+)$}.source
+    out_pattern += %r{(?<output_scope>#{@inline_scope})/}.source unless @inline_scope.nil?
+    out_pattern += /(?<stem>(\S+))(?<ext>\.[^\.]+)$/.source
     info = Regexp.new(out_pattern).match(output)
     res = Hash[info.names.zip(info.captures)]
-    if !info[:scope].nil?
+    unless info[:scope].nil?
       scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
-      res[:scopes] = scopes[1..].reverse
+      res[:scopes] = scopes[1..-1].reverse
     end
-    if !@inline_scope.nil? and !info[:output_scope].nil?
+    if !@inline_scope.nil? && !info[:output_scope].nil?
       segs = Regexp.new(@inline_scope).match(info[:output_scope]).captures
       res[:output_scopes] = segs
     end
@@ -54,6 +62,7 @@ class Token
     res[:name] = output
     OpenStruct.new res
   end
+  # rubocop:enable Style/MethodLength
 
   # attach a new item to the chain
   def _attach_(item)
@@ -61,7 +70,6 @@ class Token
   end
 
   def method_missing(sym, *args)
-    # puts sym
     # if ends with '=' then is to compile;
     # if not but has a arg then it is template token, push template;
     # else is inconclusive so just push symbol
@@ -69,9 +77,15 @@ class Token
       @compiler.compile(_attach_(sym.to_s.chomp('=')), args.first)
     elsif !args.empty?
       _attach_ args.first.to_s
-    else
+    elsif !internal(sym)
       _attach_ sym.to_s
+    else
+      super
     end
+  end
+
+  def respond_to_missing?(name, include_private = false)
+    internal(name) ? super : true
   end
 
   # non capture matching anything
@@ -91,7 +105,6 @@ class Token
     @chain.length > 1
   end
 
-  # TODO: no @var used, bad smell
   def _inputs_(output, ext)
     # no input
     return [] if @chain.length == 1
@@ -103,23 +116,21 @@ class Token
   end
 
   def _scope_pattern_
-    '((?:(\S+)/)?' +
-      (@context.scopes.map {|layer| "(#{layer.join('|')})" }).join('/') +
-      ')'
+    '((?:(\S+)/)?' + (@context.scopes.map { |layer| "(#{layer.join('|')})" }).join('/') + ')'
   end
 
   def _pattern_
     # scopes as leading
-    leading = @context.scopes.length > 0 ? _scope_pattern_ + '/' : _scope_pattern_
-    if !@inline_scope.nil?
-      leading += "(#{@inline_scope})/"
-    end
+    leading = !@context.scopes.empty? ? _scope_pattern_ + '/' : _scope_pattern_
+    leading += "(#{@inline_scope})/" unless @inline_scope.nil?
     body = @chain.reverse.map { |s| "(#{s})" }.join('__')
     Regexp.new('^' + leading + body + '\.' + @context.ext.to_s + '$')
   end
 
-  def _template_(scope=nil)
-    (scope.nil? ? '' : scope + '/') + (@inline_scope.nil? ? '' : @inline_scope + '/') + @chain.reverse.join('__') + '.' + @context.ext.to_s
+  def _template_(scope = nil)
+    (scope.nil? ? '' : scope + '/') + (@inline_scope.nil? ? '' : @inline_scope + '/') +
+      @chain.reverse.join('__') + '.' +
+      @context.ext.to_s
   end
 
   # These two methods indicate that this is a pattern token

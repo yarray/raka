@@ -4,8 +4,8 @@ require 'fileutils'
 
 require_relative './token'
 
-def array_to_hash(a)
-  a.nil? ? {} : Hash[((0...a.size).map { |i| i.to_s.to_sym }).zip a]
+def array_to_hash(array)
+  array.nil? ? {} : Hash[((0...array.size).map { |i| i.to_s.to_sym }).zip array]
 end
 
 # compiles rule (lhs = rhs) to rake task
@@ -29,12 +29,11 @@ class DSLCompiler
       input: deps.first || '',
       task: task
     }
-    OpenStruct.new(
-      output_info.to_h.merge(task_info)
-    )
+    OpenStruct.new(output_info.to_h.merge(task_info))
   end
 
-  # resolve auto variables with only output info, useful when resolve extra deps (task is not available yet)
+  # resolve auto variables with only output info,
+  # useful when resolve extra deps (task is not available yet)
   def resolve_by_output(target, output_info)
     info = output_info
     text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
@@ -67,6 +66,26 @@ class DSLCompiler
       .gsub(/\$\(dep(\d+)\)/, '%{\1}') % args
   end
 
+  def rule_action(lhs, actions, extra_tasks, task)
+    return if actions.empty?
+
+    task = dsl_task(lhs, task)
+    unless task.scope.nil?
+      folder = task.scope
+      folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
+      FileUtils.makedirs(folder)
+    end
+    actions.each do |action|
+      action.call @env, task do |code|
+        resolve(code, task)
+      end
+    end
+
+    extra_tasks.each do |templ|
+      Rake::Task[resolve(templ, task)].invoke
+    end
+  end
+
   # build one rule
   def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
     # the "rule" method is private, maybe here are better choices
@@ -78,27 +97,12 @@ class DSLCompiler
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
-      next if actions.empty?
-
-      task = dsl_task(lhs, task)
-      unless task.scope.nil?
-        folder = task.scope
-        folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
-        FileUtils.makedirs(folder)
-      end
-      actions.each do |action|
-        action.call @env, task do |code|
-          resolve(code, task)
-        end
-      end
-
-      extra_tasks.each do |templ|
-        Rake::Task[resolve(templ, task)].invoke
-      end
+      rule_action(lhs, actions, extra_tasks, task)
     end
   end
 
   # compile token = rhs to rake rule
+  # rubocop:disable Style/MethodLength
   def compile(lhs, rhs)
     unless @env.instance_of?(Object)
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
@@ -146,3 +150,4 @@ class DSLCompiler
     end
   end
 end
+# rubocop:enable Style/MethodLength

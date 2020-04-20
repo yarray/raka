@@ -9,7 +9,7 @@ Metrics/MethodLength:
 
 Metrics/AbcSize:
   # Enable: false
-  Max: 25
+  Max: 50
 
 Naming/BinaryOperatorParameterName:
   Enabled: false
