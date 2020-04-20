@@ -4,6 +4,17 @@ require 'fileutils'
 require 'test/unit'
 require 'rake'
 
+require 'optparse'
+
+$options = {}
+OptionParser.new do |opts|
+  opts.banner = 'Usage: example.rb [options]'
+
+  opts.on('-l', '--lang LANG', 'Include language protocols') do |langs|
+    $options[:lang] = langs.split ','
+  end
+end.parse!
+
 # TestContext which provides ability of adding test code in raka files
 class TestContext
   def initialize
@@ -35,7 +46,9 @@ end
 class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
-  all_samples = Dir.glob('**/*.raka')
+  # exclude protocol langs, add them on demand
+  all_samples = FileList['**/*.raka'].exclude('protocol/*/*.raka')
+  all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
   # all_samples = ['protocol/shell/block.raka']
   all_samples.each do |path|
     # change to absolute

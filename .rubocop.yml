@@ -19,3 +19,4 @@ AllCops:
   Exclude:
     - '**/Rakefile'
     - '**/*.raka'
+  TargetRubyVersion: 2.6

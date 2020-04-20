@@ -8,10 +8,10 @@ require_relative './token'
 
 # initialize raka
 class Raka
-  def create_logger
+  def create_logger(level)
     @env.define_singleton_method :logger do
       logger = Logger.new(STDOUT)
-      logger.level = Logger::INFO
+      logger.level = level
       logger
     end
   end
@@ -36,16 +36,16 @@ class Raka
 
   def initialize(env, options)
     @env = env
-    create_logger
-
     defaults = {
       output_types: [:csv], input_types: [],
       scopes: [],
       protocols: ['lang/shell'],
       user_protocols: []
     }
-
     @options = options = OpenStruct.new(defaults.merge(options))
+
+    create_logger options.log_level || Logger::INFO
+
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
