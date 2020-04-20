@@ -87,10 +87,10 @@ class DSLCompiler
   end
 
   # build one rule
-  def create_rule(lhs, get_inputs, actions, extra_deps, extra_tasks)
+  def create_rule(lhs, input_ext, actions, extra_deps, extra_tasks)
     # the "rule" method is private, maybe here are better choices
     @env.send(:rule, lhs._pattern_ => [proc do |target|
-      inputs = get_inputs.call target
+      inputs = lhs._inputs_(target, input_ext)
       extra_deps = extra_deps.map do |templ|
         resolve_by_output(templ, lhs._parse_output_(target))
       end
@@ -143,10 +143,8 @@ class DSLCompiler
 
     # We generate a rule for each possible input type
     @options.input_types.each do |ext|
-      get_inputs = proc { |output| lhs._inputs_(output, ext) }
-
       # We find auto source from both THE scope and the root
-      create_rule lhs, get_inputs, actions, extra_deps, extra_tasks
+      create_rule lhs, ext, actions, extra_deps, extra_tasks
     end
   end
 end
