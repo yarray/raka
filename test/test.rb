@@ -4,6 +4,7 @@ require 'fileutils'
 require 'test/unit'
 require 'rake'
 
+# TestContext which provides ability of adding test code in raka files
 class TestContext
   def initialize
     @tests = []
@@ -16,6 +17,21 @@ class TestContext
   attr_reader :tests
 end
 
+# The test wrapper for raka
+# RakaTest will look for every .raka files, invoke the default task
+# and check the hooked test code. Tested .raka files should define a default
+# task like:
+#
+# ```rake
+# task :default, [:ctx] => [<real target>] do |t, args|
+#     args.ctx.add_test do
+#       # testing code, assert_xx methods are available
+#     end
+# end
+# ```
+#
+# As shown above, a ctx is passed in and offered an add_test method. Testing code with
+# will be wrapped in a test_xx functions so that assert_xx methods are available
 class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init

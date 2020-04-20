@@ -18,6 +18,16 @@ def bash(env, cmd)
   env.send :sh, 'bash ' + create_tmp(code)
 end
 
+def create_tmp(content)
+  tmpfile = "/tmp/#{SecureRandom.uuid}"
+
+  File.open(tmpfile, 'w') do |f|
+    f.write content
+  end
+
+  tmpfile
+end
+
 # protocol conforms the interface:
 #
 # call(env, task) resolve
@@ -28,16 +38,12 @@ end
 # There are two methods to provide code to a language protocol, either a string literal
 # OR a ruby block. Cannot choose both.
 class LanguageProtocol
-  attr_accessor :block
+  attr_writer :block
 
-  def create_tmp(content)
-    tmpfile = "/tmp/#{SecureRandom.uuid}"
-
-    File.open(tmpfile, 'w') do |f|
-      f.write content
-    end
-
-    tmpfile
+  def initialize
+    # contextual variables, will be passed later
+    @block = nil
+    @text = nil
   end
 
   # for syntax sugar like shell* <code text>
@@ -50,8 +56,6 @@ class LanguageProtocol
   def call(env, task)
     code = yield @text if @text
     code = yield @block.call(task) if @block
-
-    throw 'No code to run' if code.nil?
 
     env.logger.debug code
     script_text = build(remove_common_indent(code), task)
@@ -127,9 +131,9 @@ class PsqlFile
                     "#{SRC_DIR}/#{task.stem}.sql"
                   end
 
-    @runner = Psql.new(@options)
-    tmp_f = @runner.create_tmp(@runner.build(File.read(script_file).strip.chomp(';')))
-    @runner.run_script env, tmp_f, task
+    runner = Psql.new(@options)
+    tmp_f = runner.create_tmp(runner.build(File.read(script_file).strip.chomp(';')))
+    runner.run_script env, tmp_f, task
   end
 end
 

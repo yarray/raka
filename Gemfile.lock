@@ -32,6 +32,7 @@ GEM
       rdoc
       semver
     jwt (2.2.1)
+    kwalify (0.7.2)
     mini_portile2 (2.4.0)
     multi_json (1.14.1)
     multi_xml (0.6.0)
@@ -48,6 +49,7 @@ GEM
     parser (2.7.0.5)
       ast (~> 2.4.0)
     power_assert (1.1.7)
+    psych (3.1.0)
     public_suffix (4.0.4)
     rack (2.2.2)
     rainbow (3.0.0)
@@ -55,6 +57,11 @@ GEM
     rchardet (1.8.0)
     rdoc (3.12.2)
       json (~> 1.4)
+    reek (6.0.0)
+      kwalify (~> 0.7.0)
+      parser (>= 2.5.0.0, < 2.8, != 2.5.1.1)
+      psych (~> 3.1.0)
+      rainbow (>= 2.0, < 4.0)
     rexml (3.2.3)
     rubocop (0.80.1)
       jaro_winkler (~> 1.5.1)
@@ -79,6 +86,7 @@ DEPENDENCIES
   juwelier (~> 2.1.0)
   rake (~> 13.0.0)
   rdoc (~> 3.12)
+  reek (~> 6.0)
   rubocop (~> 0.80.0)
   test-unit (~> 3.3.0)
 

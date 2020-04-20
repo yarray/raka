@@ -13,4 +13,6 @@ group :development do
   gem "rake", "~> 13.0.0"
   gem "test-unit", "~> 3.3.0"
   gem "rubocop", "~> 0.80.0"
+  gem "reek", "~> 6.0"
 end
+
