@@ -20,6 +20,10 @@ Naming/BinaryOperatorParameterName:
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: 'indented'
 
+Style/GlobalVars:
+  Exclude:
+    - 'test/test.rb'
+
 # Rakefile with dsl is not normal ruby code
 AllCops:
   Exclude:

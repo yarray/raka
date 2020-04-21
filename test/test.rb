@@ -13,6 +13,10 @@ OptionParser.new do |opts|
   opts.on('-l', '--lang LANG', 'Include language protocols') do |langs|
     $options[:lang] = langs.split ','
   end
+
+  opts.on('-t', '--targets TARGET', 'Specify test raka file pattern') do |targets|
+    $options[:targets] = (targets.split(',').map { |pat| FileList[pat] }).flatten
+  end
 end.parse!
 
 # TestContext which provides ability of adding test code in raka files
@@ -46,9 +50,13 @@ end
 class RakaTest < Test::Unit::TestCase
   rake = Rake.application
   rake.init
-  # exclude protocol langs, add them on demand
-  all_samples = FileList['**/*.raka'].exclude('protocol/*/*.raka')
-  all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
+  if $options.include? :targets
+    all_samples = $options[:targets]
+  else
+    # exclude protocol langs, add them on demand
+    all_samples = FileList['**/*.raka'].exclude('protocol/*/*.raka')
+    all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
+  end
   # all_samples = ['core/autovar.raka']
   all_samples.each do |path|
     # change to absolute

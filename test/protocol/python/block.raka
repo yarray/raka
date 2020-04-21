@@ -3,11 +3,23 @@ require '../lib/raka'
 
 dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
 
-txt.test = py* "open('$@', 'w').write(str(sum([1, 2, 6])))"
+txt.test = py do |task|
+    <<-PYTHON
+    out = "#{task.name}"
+    def fib(n):
+        if n == 1:
+            return 1
+        if n == 2:
+            return 1
+        else:
+            return fib(n - 1) + fib(n - 2)
+    open(out, 'w').write(str(fib(6)))
+    PYTHON
+end
 
 # rake task
 task :default, [:ctx] => ['_out/test.txt'] do |t, args|
     args.ctx.add_test do
-        assert_equal '9', File.read(t.prerequisites[0]).chomp
+        assert_equal '8', File.read(t.prerequisites[0]).chomp
     end
 end
