@@ -8,7 +8,7 @@ table.year_timespots = shell* 'echo $@ && touch $@'
 
 dsl.scopes :de
 
-csv.year_timespots.round = shell('~')* "echo $PWD" + shell* "touch $@"
+csv.year_timespots.round = shell* "echo $PWD" + shell* "touch $@"
 
 csv.compound_building.year.geom = ['round__year_timespots.csv'] | shell* "touch $@"
 

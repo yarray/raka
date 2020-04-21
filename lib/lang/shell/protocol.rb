@@ -4,12 +4,8 @@ require_relative '../../protocol'
 
 # shell(bash) protocol
 class Shell < LanguageProtocol
-  def initialize(base_dir = './')
-    @base_dir = base_dir
-  end
-
   def build(code, _)
-    ["cd #{@base_dir}", 'set -e', code].join "\n"
+    ['set -e', code].join "\n"
   end
 
   def run_script(env, fname, _)
