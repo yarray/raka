@@ -4,7 +4,7 @@ dsl = Raka.new(self, output_types: [:txt])
 
 txt.test = shell do |task|
     <<-SHELL
-    echo -n Hello World > $@
+    echo -n Hello World > #{task.name}
     echo -n !!! >> #{task.name}
     SHELL
 end

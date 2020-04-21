@@ -49,7 +49,7 @@ class RakaTest < Test::Unit::TestCase
   # exclude protocol langs, add them on demand
   all_samples = FileList['**/*.raka'].exclude('protocol/*/*.raka')
   all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
-  # all_samples = ['protocol/shell/block.raka']
+  # all_samples = ['core/autovar.raka']
   all_samples.each do |path|
     # change to absolute
     name = File.dirname(path).gsub('/', '_') + '_' + File.basename(path, File.extname(path))

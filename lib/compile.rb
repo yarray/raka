@@ -8,6 +8,13 @@ def array_to_hash(array)
   array.nil? ? {} : Hash[((0...array.size).map { |i| i.to_s.to_sym }).zip array]
 end
 
+def protect_percent_symbol(text)
+  anchor = '-_-_-'
+  safe_text = text.gsub(/%(?=[^\s{]+)/, anchor) # replace % not in shape of %{ to special sign
+  safe_text = yield safe_text
+  safe_text.gsub(anchor, '%') # replace % not in shape of %{ to special sign
+end
+
 # compiles rule (lhs = rhs) to rake task
 class DSLCompiler
   # keep env as running environment of rake since we want to inject rules
@@ -38,17 +45,17 @@ class DSLCompiler
     info = output_info
     text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
     text = text
-           .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
-           .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
-           .gsub('$(stem)', info.stem)
-           .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
-           .gsub('$@', info.name) % (info.to_h.merge info.captures.to_h)
+      .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
+      .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
+      .gsub('$(stem)', info.stem)
+      .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
+      .gsub('$@', info.name)
 
-    text = text
-           .gsub(/\$\(scope(\d+)\)/, '%{\1}') % array_to_hash(info.scopes)
-
-    text
-      .gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scopes)
+    protect_percent_symbol text do |safe_text|
+      safe_text = safe_text % (info.to_h.merge info.captures.to_h)
+      safe_text = safe_text.gsub(/\$\(scope(\d+)\)/, '%{\1}') % array_to_hash(info.scopes)
+      safe_text.gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scopes)
+    end
   end
 
   # resolve auto variables with dsl task
@@ -56,14 +63,15 @@ class DSLCompiler
     # convert target to text whether it is expression or already text
     text = resolve_by_output target, task
 
-    # add numbered auto variables like $0, $2 referring to the first and third deps
-    args = array_to_hash(task.deps)
-
     # convert $0, $1 to the universal shape of %{dep} as captures
-    text
+    text = text
       .gsub('$^', task.deps_str)
       .gsub('$<', task.input || '')
-      .gsub(/\$\(dep(\d+)\)/, '%{\1}') % args
+
+    protect_percent_symbol text do |safe_text|
+      # add numbered auto variables like $0, $2 referring to the first and third deps
+      safe_text.gsub(/\$\(dep(\d+)\)/, '%{\1}') % array_to_hash(task.deps)
+    end
   end
 
   def rule_action(lhs, actions, extra_tasks, task)

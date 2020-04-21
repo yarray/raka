@@ -1,0 +1,17 @@
+require 'logger'
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
+
+txt.test = py* %(
+    data = [1, 2, 6]
+    with open('$@', 'w') as f:
+        f.write(str(sum(data)))
+)
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '9', File.read(t.prerequisites[0]).chomp
+    end
+end

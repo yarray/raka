@@ -55,7 +55,7 @@ class LanguageProtocol
   # a block::str -> str should be given to resolve the bindings in code text
   def call(env, task)
     code = yield @text if @text
-    code = yield @block.call(task) if @block
+    code = @block.call(task) if @block # do not resolve
 
     env.logger.debug code
     script_text = build(remove_common_indent(code), task)
@@ -67,7 +67,14 @@ class LanguageProtocol
   def build(code, _)
     code
   end
-  # run_script(fname, task)
+
+  # run_script(env, fname, tas)
+  def run_script(env, *args)
+    env.send :sh, run_script_cmd(env, *args), verbose: env.logger.level == Logger::DEBUG
+  end
+
+  # run_script_cmd(env, fname, task)
+  # can override thise only to use standard stdout & sterr suppressing, etc.
 end
 
 # postgresql protocol using psql, requires HOST, PORT, USER, DB

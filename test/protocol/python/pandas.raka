@@ -1,0 +1,27 @@
+require 'logger'
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:csv], protocols: ['lang/python'])
+
+csv.test.stat = py(libs = [:pandas])* %(
+    df = pd.read_csv('$<')
+    open('$@', 'w').write(str(df["count"].mean()))
+)
+
+csv.test = run do |task|
+    content = %(
+        fruit,count
+        apple,1
+        orange,3
+        banana,6
+        peach,2
+    )
+    File.write(task.name, content)
+end
+
+# rake task
+task :default, [:ctx] => ['_out/stat__test.csv'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '3.0', File.read(t.prerequisites[0]).chomp
+    end
+end
