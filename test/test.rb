@@ -55,7 +55,9 @@ class RakaTest < Test::Unit::TestCase
   else
     # exclude protocol langs, add them on demand
     all_samples = FileList['**/*.raka'].exclude('protocol/*/*.raka')
-    all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
+    if $options.include? :lang
+      all_samples += ($options[:lang].map { |lang| FileList["protocol/#{lang}/*.raka"] }).flatten
+    end
   end
   # all_samples = ['core/autovar.raka']
   all_samples.each do |path|

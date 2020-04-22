@@ -2,13 +2,20 @@
 
 require_relative '../../protocol'
 
+COMMON_ALIASES = {
+  pandas: :pd,
+  numpy: :np
+}.freeze
+
 # shell(bash) protocol
 class Python < LanguageProtocol
-  def initialize(libs = [])
+  def initialize(libs: [], **kwargs)
     libs = libs.map(&:to_s) # convert all to strings
     @imports = libs.map { |lib| "import #{lib}" }
-    @imports.push('import pandas as pd') if libs.include? 'pandas'
-    @imports.push('import numpy as np') if libs.include? 'numpy'
+    COMMON_ALIASES.each do |name, short|
+      @imports.push("import #{name} as #{short}") if libs.include? name.to_s
+    end
+    super(**kwargs)
   end
 
   def build(code, _task)

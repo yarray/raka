@@ -29,10 +29,11 @@ end
 class LanguageProtocol
   attr_writer :block
 
-  def initialize
+  def initialize(script_template: '<code>')
     # contextual variables, will be passed later
     @block = nil
     @text = nil
+    @script_template = script_template
   end
 
   # for syntax sugar like shell* <code text>
@@ -41,13 +42,17 @@ class LanguageProtocol
     [self]
   end
 
+  def wrap_template(code)
+    @script_template.gsub(/^\<code\>$/, code)
+  end
+
   # a block::str -> str should be given to resolve the bindings in code text
   def call(env, task)
     code = yield @text if @text
     code = @block.call(task) if @block # do not resolve
 
     env.logger.debug code
-    script_text = build(remove_common_indent(code), task)
+    script_text = build(wrap_template(remove_common_indent(code)), task)
     run_script env, create_tmp(script_text), task
   end
 
@@ -60,8 +65,8 @@ class LanguageProtocol
   # run_script(env, fname, tas)
   def run_script(env, *args)
     Open3.popen3(run_script_cmd(env, *args)) do |_stdin, stdout, stderr, _thread|
-      env.logger.debug(stdout)
-      env.logger.debug(stderr)
+      env.logger.debug(stdout.read)
+      env.logger.debug(stderr.read)
     end
   end
 
@@ -70,8 +75,8 @@ class LanguageProtocol
 end
 
 def creator(name, klass)
-  define_singleton_method name do |*args, &block|
-    res = klass.new(*args)
+  define_singleton_method name do |*args, **kwargs, &block|
+    res = klass.new(*args, **kwargs)
     if block
       res.block = block
       [res]

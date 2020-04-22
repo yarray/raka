@@ -3,7 +3,7 @@ require '../lib/raka'
 
 dsl = Raka.new(self, output_types: [:csv], protocols: ['lang/python'])
 
-csv.test.stat = py(libs = [:pandas])* %(
+csv.test.stat = py(libs: [:pandas])* %(
     df = pd.read_csv('$<')
     open('$@', 'w').write(str(df["count"].mean()))
 )

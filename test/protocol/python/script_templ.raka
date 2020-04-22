@@ -1,0 +1,29 @@
+require 'logger'
+require '../lib/raka'
+
+py_templ = <<-PYTHON
+def input(fname):
+    with open(fname) as f:
+        in_text = f.read()
+    return in_text
+
+
+def output(fname, text, mode='a'):
+    with open(fname, mode) as f:
+        f.write(text)
+
+<code>
+PYTHON
+
+dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
+
+txt.test.world = py(script_template: py_templ)* "output('$@', 'Hello ' + input('$<'), 'w')"
+
+txt.test = py(script_template: py_templ)* "output('$@', 'World')"
+
+# rake task
+task :default, [:ctx] => ['_out/world__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'Hello World', File.read(t.prerequisites[0]).chomp
+    end
+end

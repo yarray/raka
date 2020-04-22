@@ -8,6 +8,8 @@ require_relative './token'
 
 # initialize raka
 class Raka
+  attr_reader :logger
+
   def create_logger(level)
     @env.define_singleton_method :logger do
       logger = Logger.new(STDOUT)

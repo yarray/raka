@@ -4,9 +4,10 @@ require_relative '../protocol'
 
 # r language protocol
 class R < LanguageProtocol
-  def initialize(src, libs = [])
+  def initialize(src, libs = [], **kwargs)
     @src = src
     @libs = libs
+    super(**kwargs)
   end
 
   def build(code, _)

@@ -3,7 +3,7 @@ require '../lib/raka'
 
 dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
 
-txt.test = py(libs = [:datetime])* %(
+txt.test = py(libs: [:datetime])* %(
     open('$@', 'w').write(datetime.datetime.min.strftime('%Y-%m-%d'))
 )
 
