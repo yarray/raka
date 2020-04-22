@@ -46,7 +46,7 @@ class Raka
     }
     @options = options = OpenStruct.new(defaults.merge(options))
 
-    create_logger options.log_level || Logger::INFO
+    create_logger options.log_level || (ENV['LOG_LEVEL'] || Logger::INFO).to_i
 
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
