@@ -1,0 +1,23 @@
+class RakaTask
+  attr_reader name: String
+  attr_reader stem: String
+  attr_reader func: String?
+  attr_reader input_stem: String?
+  attr_reader scope: String?
+  attr_reader output_scope: String?
+  attr_reader scopes: Array[String]
+  attr_reader output_scopes: Array[String]
+  attr_reader captures: Hash[String, String]
+  attr_reader deps: Array[String]
+  attr_reader deps_str: String
+  attr_reader input: String
+  attr_reader task: Object # RakeTask
+end
+
+class RakaEnv
+end
+
+class LanguageImpl
+  def build: (String code, RakaTask task) -> String
+  def run_script: (RakaEnv env, String fname, RakaTask task) -> nil
+end

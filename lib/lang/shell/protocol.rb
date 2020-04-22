@@ -3,13 +3,14 @@
 require_relative '../../protocol'
 
 # shell(bash) protocol
-class Shell < LanguageProtocol
+class Shell
+  # @implements LanguageImpl
   def build(code, _)
     ['set -e', code].join "\n"
   end
 
   def run_script(env, fname, _)
-    env.send :sh, "bash #{fname}", verbose: env.logger.level == Logger::DEBUG
+    run_cmd(env, "bash #{fname}")
   end
 end
 

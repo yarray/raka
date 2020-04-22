@@ -3,7 +3,7 @@
 require_relative '../../lib/protocol'
 
 # awk script protocol, the input is bound to the content of the auto input
-class Awk < LanguageProtocol
+class Awk
   def build(code, task)
     <<-SHELL
     cat #{task.input} | awk '#{code}' > #{task.name}
@@ -11,7 +11,7 @@ class Awk < LanguageProtocol
   end
 
   def run_script(env, fname, _)
-    env.send :sh, "bash #{fname}", verbose: env.logger.level == Logger::DEBUG
+    run_cmd(env, "bash #{fname}")
   end
 end
 

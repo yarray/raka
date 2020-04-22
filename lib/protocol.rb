@@ -29,11 +29,20 @@ end
 class LanguageProtocol
   attr_writer :block
 
-  def initialize(script_template: '<code>')
+  private
+
+  def wrap_template(code)
+    @script_template.gsub(/^\<code\>$/, code)
+  end
+
+  public
+
+  def initialize(language_impl, options)
     # contextual variables, will be passed later
+    @impl = language_impl
+    @script_template = options[:script_template] || '<code>'
     @block = nil
     @text = nil
-    @script_template = script_template
   end
 
   # for syntax sugar like shell* <code text>
@@ -42,51 +51,19 @@ class LanguageProtocol
     [self]
   end
 
-  def wrap_template(code)
-    @script_template.gsub(/^\<code\>$/, code)
-  end
-
   # a block::str -> str should be given to resolve the bindings in code text
   def call(env, task)
     code = yield @text if @text
     code = @block.call(task) if @block # do not resolve
 
     env.logger.debug code
-    script_text = build(wrap_template(remove_common_indent(code)), task)
-    run_script env, create_tmp(script_text), task
-  end
-
-  # template methods:
-  # build(code, task)
-  def build(code, _)
-    code
-  end
-
-  # run_script(env, fname, tas)
-  def run_script(env, *args)
-    Open3.popen3(run_script_cmd(env, *args)) do |_stdin, stdout, stderr, _thread|
-      env.logger.debug(stdout.read)
-      env.logger.debug(stderr.read)
-    end
-  end
-
-  # run_script_cmd(env, fname, task)
-  # can override thise only to use standard stdout & sterr suppressing, etc.
-end
-
-def creator(name, klass)
-  define_singleton_method name do |*args, **kwargs, &block|
-    res = klass.new(*args, **kwargs)
-    if block
-      res.block = block
-      [res]
-    else
-      res # if no block, waiting for * to add code text
-    end
+    script_text = @impl.build(wrap_template(remove_common_indent(code)), task)
+    @impl.run_script env, create_tmp(script_text), task
   end
 end
 
-# A special protocol, just a wrapper for action, pass block instead of string to execute
+# A special language protocol, just a wrapper for action, pass block instead of
+# string to execute
 # named RubyP to avoid name collision
 class RubyP
   def initialize(&block)
@@ -102,4 +79,35 @@ end
 # use run instead of "ruby" to avoid name collision
 def run(&block)
   [RubyP.new(&block)]
+end
+
+# helper functions to implement LanguageImpl
+def run_cmd(env, cmd)
+  Open3.popen3(cmd) do |_stdin, stdout, stderr, _thread|
+    env.logger.debug(stdout.read)
+    env.logger.debug(stderr.read)
+  end
+end
+
+def pick_kwargs(klass, kwargs)
+  param_ref = klass.instance_method(:initialize).parameters
+    .filter { |arg| arg.size == 2 && arg[0] == :key }
+    .map { |arg| arg[1] }
+  kwargs.filter do |key, _value|
+    param_ref.include? key
+  end
+end
+
+def creator(name, klass)
+  define_singleton_method name do |*args, **kwargs, &block|
+    # pick keyword arguments for klass
+    impl = klass.new(*args, **pick_kwargs(klass, kwargs))
+    proto = LanguageProtocol.new(impl, **kwargs)
+    if block
+      proto.block = block
+      [proto]
+    else
+      proto # if no block, waiting for * to add code text
+    end
+  end
 end
