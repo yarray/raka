@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+UNDERSCORE_PATTERN = '\S+'
+
 # Context to preserve during the token chaining
 class Context
   attr_reader :ext
@@ -91,7 +93,7 @@ class Token
     if !args.empty?
       _attach_ args.first.to_s
     else
-      _attach_ '\S+'
+      _attach_ UNDERSCORE_PATTERN
     end
   end
 
@@ -132,13 +134,15 @@ class Token
   end
 
   # These two methods indicate that this is a pattern token
-  def [](pattern = '\S+')
+  def [](pattern)
     symbol = @chain.pop.to_s
     # if the pattern contains child pattern like percent_(\d+), we change the capture to
     # named capture so that it can be captured later. The name is symbol with the index, like func0
     pattern = pattern.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
 
-    if symbol == '\S+' # match-everything and not bound
+    # if the symbol is _, \S+ will be put in chain, it indicates not to capture,
+    # so just replace it with the refined pattern
+    if symbol == UNDERSCORE_PATTERN # match-everything and not bound
       @chain.push pattern.to_s
     else
       @chain.push "(?<#{symbol}>(#{pattern}))"
@@ -146,7 +150,7 @@ class Token
     self
   end
 
-  def []=(pattern = '\S+', value = '')
+  def []=(pattern, value)
     @compiler.compile(self[pattern], value)
   end
 end
