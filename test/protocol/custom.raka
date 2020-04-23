@@ -1,6 +1,6 @@
 require '../lib/raka'
 
-dsl = Raka.new(self, output_types: [:txt], user_protocols: ['./protocol/custom'])
+dsl = Raka.new(self, output_types: [:txt], user_lang: ['./protocol/custom'])
 
 txt.test.col['col_(\d+)'] = awk* '{s+=$%{col0}} END {print "We have "s" fruits"}'
 

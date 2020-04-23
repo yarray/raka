@@ -41,8 +41,8 @@ class Raka
     defaults = {
       output_types: [:csv], input_types: [],
       scopes: [],
-      protocols: ['lang/shell'],
-      user_protocols: []
+      lang: ['lang/shell'],
+      user_lang: []
     }
     @options = options = OpenStruct.new(defaults.merge(options))
 
@@ -51,8 +51,8 @@ class Raka
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
-    @options.protocols.each { |path| require_relative "#{path}/protocol" }
-    @options.user_protocols.each { |path| require path.to_s }
+    @options.lang.each { |path| require_relative "#{path}/impl" }
+    @options.user_lang.each { |path| require path.to_s }
 
     # These are where the dsl starts
     @options.output_types.each do |ext|

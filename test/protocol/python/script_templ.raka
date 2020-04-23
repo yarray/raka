@@ -15,7 +15,7 @@ def output(fname, text, mode='a'):
 <code>
 PYTHON
 
-dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
+dsl = Raka.new(self, output_types: [:txt], lang: ['lang/python'])
 
 txt.test.world = py(script_template: py_templ)* "output('$@', 'Hello ' + input('$<'), 'w')"
 

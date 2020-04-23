@@ -1,4 +1,4 @@
-**Raka** is a **DSL**(Domain Specific Language)  on top of **Ra**ke for managing d**a**t**a** processing tasks. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity. 
+**Raka** is a **DSL**(Domain Specific Language) on top of **Ra**ke for managing d**a**t**a** processing tasks. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity.
 
 ## Why Raka
 
@@ -15,9 +15,9 @@ Data processing tasks can involve plenty of steps, each with its dependencies. M
 
 ## Usage
 
-Raka is a drop-in library for rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. To use raka, one has to install ruby and rake first. Ruby is available for most *nix systems including Mac OSX so the only task is to install rake like:
+Raka is a drop-in library for rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. To use raka, one has to install ruby and rake first. Ruby is available for most \*nix systems including Mac OSX so the only task is to install rake like:
 
-``` bash
+```bash
 gem install rake
 ```
 
@@ -31,7 +31,7 @@ require_relative './raka/dsl'
 
 First create a file named `Rakefile` and import & initialize the DSL
 
-``` ruby
+```ruby
 require_relative './raka/dsl'
 
 dsl = DSL.new(self,
@@ -42,33 +42,33 @@ dsl = DSL.new(self,
 
 Then the code below will define two simple rules:
 
-``` ruby
+```ruby
 txt.sort.first50 = shell* "cat sort.txt | head -n 50 > $@"
 txt.sort = [txt.input] | shell* "cat $< | sort -rn > $@"
 ```
 
 For testing let's prepare an input file named `input.txt`:
 
-``` bash
+```bash
 seq 1000 > input.txt
 ```
 
-We can then invoke `rake first50.txt`, the script will read data from *input.txt*, sort the numbers descendingly and get the first 50 lines.
+We can then invoke `rake first50.txt`, the script will read data from _input.txt_, sort the numbers descendingly and get the first 50 lines.
 
 The workflow here is as follows:
 
-1. Try to find *first50__sort.txt*: not exists
+1. Try to find _first50\_\_sort.txt_: not exists
 2. Rule `txt.sort.first50` matched
-3. For rule `txt.sort.first50`, find input file *sort.txt* or *sort.table*. Neither exists
+3. For rule `txt.sort.first50`, find input file _sort.txt_ or _sort.table_. Neither exists
 4. Rule `txt.sort` matched
 5. Rule `txt.sort` has no input but a depended target `txt.input`
-6. Find file *input.txt* or *input.table*. Use the former
-7. Run rule `txt.sort` and create *sort.txt*
-8. Run rule `txt.sort.first50` and create *first50__sort.txt*
+6. Find file _input.txt_ or _input.table_. Use the former
+7. Run rule `txt.sort` and create _sort.txt_
+8. Run rule `txt.sort.first50` and create _first50\_\_sort.txt_
 
 This illustrates some basic ideas but may not be particularly interesting. Following is a much more sophisticated example from real world research which covers more features.
 
-``` ruby
+```ruby
 SRC_DIR = File.absolute_path 'src'
 USER = 'postgres'
 DB = 'osm'
@@ -85,37 +85,37 @@ pdf.buildings.func['(\S+)_graph'] = r(:graph)* %[
 table.buildings = [csv.admin] | psqlf(admin: '$<') | idx_this
 ```
 
-Assume that we have a schema named *de* in database *osm*, have a input file *admin.csv*, and have *graph.R* and *buildings.sql* under *src/*. Now further assume that *graph.R* contains two functions:
+Assume that we have a schema named _de_ in database _osm_, have a input file _admin.csv_, and have _graph.R_ and _buildings.sql_ under _src/_. Now further assume that _graph.R_ contains two functions:
 
-``` r
+```r
 draw_stat_snapshot <- function(d) { ... }
 draw_user_trend <- function(d) { ... }
 ```
 
-...and *buildings.sql* contains table creation code like:
+...and _buildings.sql_ contains table creation code like:
 
-``` sql
+```sql
 DROP TABLE IF EXISTS buildings;
 CREATE TABLE buildings AS ( ... );
 ```
 
-We may also have a *buildings_idx.sql* to create index for the table.
+We may also have a _buildings_idx.sql_ to create index for the table.
 
 Then we can run either `rake de/stat_snapshot_graph__buildings.pdf` or `rake de/user_trend_graph__buildings.pdf`, which will do a bunch of things at first run (take the former as example):
 
-1. Target file not found. 
+1. Target file not found.
 2. Rule `pdf.buildings.func['(\S+)_graph']` matched. "stat_snapshot_graph" is bound to `func` and "stat_snapshot" is bound to `func0`.
-3. None of the four possible input files: *de/buildings.table*, *de/buildings.txt*, *buildings.table*, *buildings.txt* can be found. Rule `table.buildings` is matched and the only dependecy file *admin.csv* is found.
-4. The protocol `psqlf` finds the source file *src/buildings.sql*, intepolate the options with automatic variables (`$<` as "admin.csv"), run the sql, and create a placeholder file *de/buildings.table* afterwards.
-5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run *buildings_idx.sql*, then create a placeholder file *de/buildings.idx*.
-6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as "buildings", `$@` as "de/stat_snapshot_graph__buildings.pdf") and the variables (`func`, `func0`) bound before.
-7. Run the R code. The *buildings* table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
+3. None of the four possible input files: _de/buildings.table_, _de/buildings.txt_, _buildings.table_, _buildings.txt_ can be found. Rule `table.buildings` is matched and the only dependecy file _admin.csv_ is found.
+4. The protocol `psqlf` finds the source file _src/buildings.sql_, intepolate the options with automatic variables (`$<` as "admin.csv"), run the sql, and create a placeholder file _de/buildings.table_ afterwards.
+5. Run the post-job `idx_this`, according to the rule `idx._` it will find and run _buildings_idx.sql_, then create a placeholder file _de/buildings.idx_.
+6. For rule `pdf.buildings.func['(\S+)_graph']`, the R code in `%[]` is interpolated with several automatic variables (`$(input_stem)` as "buildings", `$@` as "de/stat_snapshot_graph\_\_buildings.pdf") and the variables (`func`, `func0`) bound before.
+7. Run the R code. The _buildings_ table is piped into the function `draw_snapshot_graph` and then output to `ggplot_output`, which writes the graph to the specified pdf file.
 
 ## Syntax of Rules
 
 It is possible to use Raka with little knowledge of ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (EBNF form):
 
-``` ebnf
+```ebnf
 rule = lexpr "=" {target_list "|"} protocol {"|" target_list};
 
 target = rexpr | template;
@@ -138,39 +138,21 @@ The corresponding railroad diagrams are:
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rule.svg)
 
-
-
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target.svg)
-
-
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target_list.svg)
 
-
-
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/lexpr.svg)
-
-
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rexpr.svg)
 
-
-
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/ltoken.svg)
-
-
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rtoken.svg)
 
-
-
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/word.svg)
 
-
-
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/protocol.svg)
-
-
 
 The definition is concise but several details are omitted for simplicity:
 
@@ -180,7 +162,6 @@ The definition is concise but several details are omitted for simplicity:
 4. The listed protocols are merely what we offered now. It can be greatly extended.
 5. Nearly any concept in the syntax can be replaced by a suitable ruby variable.
 
-
 ## Pattern matching and template resolving
 
 When defined a rule like `lexpr = rexpr`, the left side represents a pattern and the right side contains specifications for extra dependecies, actions and some targets to create thereafter. When raking a target file, the left sides of the rules will be examined one by one until a rule is matched. The matching process based on Regex also support named captures so that some varibales can be bound for use in the right side.
@@ -189,19 +170,19 @@ The specifications on the right side of a rule can be incomplete from various as
 
 ### Pattern matching
 
-To match a given *file* with a `lexpr`, asides the extension, the substrings of the file name between "\_\_" are mapped to tokens separated by `.`, in reverse order. After that, each substring is matched to the  corresponding token or the regex in `[]`. For example, the rule
+To match a given _file_ with a `lexpr`, asides the extension, the substrings of the file name between "\_\_" are mapped to tokens separated by `.`, in reverse order. After that, each substring is matched to the corresponding token or the regex in `[]`. For example, the rule
 
-``` ruby
+```ruby
 pdf.buildings.indicator['\S+'].top['top_(\d+)']
 ```
 
-can match "top\_50\__node\_num__buildings.pdf". The logical process is:
+can match "top_50\_\_node_num\_\_buildings.pdf". The logical process is:
 
 1. The extension `pdf` matches.
 2. The substrings and the tokens are paired and they all match:
-   * `buildings ~ buildings`
-   * `'\S+' ~ node_num`
-   * `top_(\d+) ~ top_50 `
+   - `buildings ~ buildings`
+   - `'\S+' ~ node_num`
+   - `top_(\d+) ~ top_50`
 3. Two levels of captures are made. First, 'node_num' is captured as `indicator`, 'top_50' is captured as `top`; Second, '50' is captured as `top0` since `\d+` is wrapped in parenthesis and is the first.
 
 One can write special token `_` or `something[]` if the captured value is useful later, as the syntax sugar of `something['\S+']`.
@@ -210,12 +191,12 @@ One can write special token `_` or `something[]` if the captured value is useful
 
 In some places of `rexpr`, templates can be written instead of strings, so that it can represent different values at runtime. There are two types of variables that can be used in templates. The first is automatic variables, which is just like `$@` in Make or `task.name` in Rake. We even preserve some Make conventions for easier migrations. All automatic varibales begin with `$`. The possible automatic variables are:
 
-| symbol        | meaning                | symbol       | meaning                         |
-| ------------- | ---------------------- | ------------ | ------------------------------- |
-| $@            | output file            | $^           | all dependecies (sep by spaces) |
-| $<            | first dependency       | $0, $1, … $i | ith depdency                    |
-| $(scope)      | scope for current task | $(stem)      | stem of the output file         |
-| $(input_stem) | stem of the input file |              |                                 |
+| symbol         | meaning                | symbol        | meaning                         |
+| -------------- | ---------------------- | ------------- | ------------------------------- |
+| \$@            | output file            | \$^           | all dependecies (sep by spaces) |
+| \$<            | first dependency       | $0, $1, … \$i | ith depdency                    |
+| \$(scope)      | scope for current task | \$(stem)      | stem of the output file         |
+| \$(input_stem) | stem of the input file |               |                                 |
 
 The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
 
@@ -229,41 +210,40 @@ Templates can happen in various places. For depdencies and post jobs, tokens wit
 
 These APIs are bounded to an instance of DSL, you can create the object at the top:
 
-``` ruby
+```ruby
 dsl = DSL.new(<env>, <options>)
 ```
 
-The argument `<env>` should be the *self* of a running Rakefile. In most case you can directly write:
+The argument `<env>` should be the _self_ of a running Rakefile. In most case you can directly write:
 
-``` ruby
+```ruby
 dsl = DSL.new(self, <options>)
 ```
 
 The argument `options` currently support `output_types` and `input_types`. For each item in `output_types`, you will get an extra function to bootstrap a rule. For example, with
 
-
-``` ruby
+```ruby
 dsl = DSL.new(self, { output_types: [:csv, :pdf] })
 ```
 
 you can write these rules like:
 
-``` ruby
+```ruby
 csv.data = ...
 pdf.graph = ...
 ```
 
 which will generate data.csv and graph.pdf
 
-The `input_types` involves the strategy to find inputs. For example, raka will try to find both *numbers.csv* and *numbers.table* for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
+The `input_types` involves the strategy to find inputs. For example, raka will try to find both _numbers.csv_ and _numbers.table_ for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
 
 ### Scope
 
 ### Protocols
 
-Currently Raka support 4 protocols: shell, psql, r and psqlf.
+Currently Raka support 4 lang: shell, psql, r and psqlf.
 
-``` ruby
+```ruby
 shell(base_dir='./')* code::templ_str { |task| ... }
 psql(options={})* code::templ_str { |task| ... }
 r(src:str, libs=[])* code::templ_str { |task| ... }

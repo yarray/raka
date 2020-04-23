@@ -1,7 +1,7 @@
 require 'logger'
 require '../lib/raka'
 
-dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
+dsl = Raka.new(self, output_types: [:txt], lang: ['lang/python'])
 py.config libs: ['datetime']
 
 txt.test = py* %(
