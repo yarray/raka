@@ -37,10 +37,10 @@ class LanguageProtocol
 
   public
 
-  def initialize(language_impl, options)
+  def initialize(language_impl, script_template: '<code>')
     # contextual variables, will be passed later
     @impl = language_impl
-    @script_template = options[:script_template] || '<code>'
+    @script_template = script_template
     @block = nil
     @text = nil
   end
@@ -98,16 +98,21 @@ def pick_kwargs(klass, kwargs)
   end
 end
 
-def creator(name, klass)
+def creator(name, klass, global_defaults = {})
+  global_config = global_defaults
   define_singleton_method name do |*args, **kwargs, &block|
     # pick keyword arguments for klass
+    kwargs = global_config.merge kwargs
     impl = klass.new(*args, **pick_kwargs(klass, kwargs))
-    proto = LanguageProtocol.new(impl, **kwargs)
+    proto = LanguageProtocol.new(impl, **pick_kwargs(LanguageProtocol, kwargs))
     if block
       proto.block = block
       [proto]
     else
-      proto # if no block, waiting for * to add code text
+      proto.define_singleton_method :config do |**config|
+        global_config = global_defaults.merge config
+      end
+      proto # if no block, allow configure or waiting for * to add code text
     end
   end
 end

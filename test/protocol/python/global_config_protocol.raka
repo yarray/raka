@@ -1,0 +1,20 @@
+require 'logger'
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt], protocols: ['lang/python'])
+py_template = <<~PYTHON
+    import datetime
+
+    <code>
+PYTHON
+
+txt.test = py* %(
+    open('$@', 'w').write(datetime.datetime.min.strftime('%Y-%m-%d'))
+)
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal '0001-01-01', File.read(t.prerequisites[0]).chomp
+    end
+end
