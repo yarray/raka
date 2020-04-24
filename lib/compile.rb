@@ -105,6 +105,13 @@ class DSLCompiler
       # main data source and extra dependencies
       inputs + extra_deps
     end]) do |task|
+      # rake continue task even if dependencies not met, we handle ourselves
+      absence = task.prerequisites.find_index { |f| !File.exist? f }
+      unless absence.nil?
+        @env.logger.warn\
+          "Dependent #{task.prerequisites[absence]} does not exist, skip task #{task.name}"
+        next
+      end
       rule_action(lhs, actions, extra_tasks, task)
     end
   end

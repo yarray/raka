@@ -8,6 +8,7 @@ require_relative './token'
 
 # initialize raka
 class Raka
+  Pattern = Pattern
   attr_reader :logger
 
   def create_logger(level)

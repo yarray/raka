@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-UNDERSCORE_PATTERN = '\S+'
+# convenient patterns for matching
+module Pattern
+  WORD = '[^_]+'
+  ANY = '\S+'
+end
 
 # Context to preserve during the token chaining
 class Context
@@ -93,12 +97,12 @@ class Token
     if !args.empty?
       _attach_ args.first.to_s
     else
-      _attach_ UNDERSCORE_PATTERN
+      _attach_ Pattern::ANY
     end
   end
 
   def _=(rhs)
-    @compiler.compile(_attach_('\S+'), rhs)
+    @compiler.compile(_attach_(Pattern::ANY), rhs)
   end
 
   def _input_?
@@ -142,7 +146,7 @@ class Token
 
     # if the symbol is _, \S+ will be put in chain, it indicates not to capture,
     # so just replace it with the refined pattern
-    if symbol == UNDERSCORE_PATTERN # match-everything and not bound
+    if symbol == Pattern::ANY # match-everything and not bound
       @chain.push pattern.to_s
     else
       @chain.push "(?<#{symbol}>(#{pattern}))"

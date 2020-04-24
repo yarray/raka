@@ -58,7 +58,10 @@ class LanguageProtocol
 
     env.logger.debug code
     script_text = @impl.build(wrap_template(remove_common_indent(code)), task)
-    @impl.run_script env, create_tmp(script_text), task
+    temp_script = create_tmp(script_text)
+    env.logger.debug temp_script
+    @impl.run_script env, temp_script, task
+    env.logger.debug script_text
   end
 end
 
@@ -85,7 +88,7 @@ end
 def run_cmd(env, cmd)
   Open3.popen3(cmd) do |_stdin, stdout, stderr, _thread|
     env.logger.debug(stdout.read)
-    env.logger.debug(stderr.read)
+    env.logger.info(stderr.read)
   end
 end
 
