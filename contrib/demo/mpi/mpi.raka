@@ -1,0 +1,69 @@
+require '../../../lib/raka'
+
+dsl = Raka.new(self, output_types: [:csv, :png, :txt], input_types: [:shp], lang: ['lang/python', 'lang/shell'])
+
+sizes = ['50M', '500M', '2000M']
+ncores = [1, 2, 4, 8, 16, 32]
+
+python_templ = <<~PYTHON
+    def gen_data(text):
+        return dict(l.split(':') for l in text.split('\\n') if len(l) > 0)
+    
+    def aggregate(out_file, inputs, groups):
+        keys = ['IO_TIME', 'COMPUTE_TIME', 'TOTAL_TIME']
+        lines = ['group,' + ','.join(keys) + '\\n']
+        for g, fname in zip(groups, inputs):
+            with open(fname) as f:
+                data = gen_data(f.read())
+            lines.append(str(g) + ''.join(',' + data[key] for key in keys) + '\\n')
+    
+        with open(out_file, 'w') as f:
+            f.writelines(lines)
+
+    <code>
+PYTHON
+
+# py.config script_template: python_templ
+
+
+# log_ncores_size.txt
+txt.name['log_(\d+)_(\d+[TGM])'] = shell* %(
+    ruby prog.rb %{name0} %{name1}.shp > $@
+)
+
+# sizes_ncores.csv
+csv.ncores['ncores_(\d+)'] = (sizes.map { |s| txt._("log_%{ncores0}_#{s}") }) | py(script_template: python_templ) do |task|
+    <<~PYTHON
+    aggregate("#{task.name}", #{task.deps.to_s}, #{sizes})
+    PYTHON
+end
+
+csv.sizes['sizes_(\d+[TGM])'] = (ncores.map { |n| txt._("log_#{n}_%{sizes0}") }) | py(script_template: python_templ) do |task|
+    <<~PYTHON
+    aggregate("#{task.name}", #{task.deps.to_s}, #{ncores})
+    PYTHON
+end
+
+
+png._.io_percent = py(libs: [:pandas])* %(
+    df = pd.read_csv("$<")
+    cols = ['IO_TIME', 'COMPUTE_TIME']
+    # df['group'] = df['group'].astype(str)
+    df[cols] = df[cols].div(df[cols].sum(axis=1), axis=0)
+    ax = df[['group'] + cols].plot(x='group', kind='bar', stacked=True)
+    ax.figure.savefig('$@')
+)
+
+png._.acc = py(libs: [:pandas])* %(
+    df = pd.read_csv("$<")
+    ax = df[['group', 'TOTAL_TIME', 'COMPUTE_TIME']].plot.line(x='group')
+    ax.figure.savefig('$@')
+)
+
+all_plots = ncores.map { |n| "out/io_percent__ncores_#{n}.png" } +
+    sizes.map { |s| "out/io_percent__sizes_#{s}.png" } +
+    sizes.map { |s| "out/acc__sizes_#{s}.png" }
+
+task default: all_plots
+
+

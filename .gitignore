@@ -2,8 +2,9 @@ tags
 .tags
 .vscode/
 .*~
-demo/**/*.csv
-demo/**/*.table
+contrib/demo/**/*.csv
+contrib/demo/**/*.table
+contrib/demo/**/*/out/
 _out/
 pkg/
 .DS_Store
