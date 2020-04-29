@@ -88,7 +88,10 @@ end
 def run_cmd(env, cmd)
   Open3.popen3(cmd) do |_stdin, stdout, stderr, _thread|
     env.logger.debug(stdout.read)
-    env.logger.info(stderr.read)
+    err = stderr.read
+    unless err.empty?
+      env.logger.info(err)
+    end
   end
 end
 
