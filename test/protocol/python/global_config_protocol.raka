@@ -7,6 +7,7 @@ py_template = <<~PYTHON
 
     <code>
 PYTHON
+py.config script_template: py_template
 
 txt.test = py* %(
     open('$@', 'w').write(datetime.datetime.min.strftime('%Y-%m-%d'))
