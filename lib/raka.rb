@@ -52,8 +52,8 @@ class Raka
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
-    @options.lang.each { |path| require_relative "#{path}/impl" }
-    @options.user_lang.each { |path| require path.to_s }
+    @options.lang.each { |path| load File::join(File::dirname(__FILE__), "#{path}/impl.rb") }
+    @options.user_lang.each { |path| load path.to_s + '.rb' }
 
     # These are where the dsl starts
     @options.output_types.each do |ext|
