@@ -99,11 +99,12 @@ class DSLCompiler
     # the "rule" method is private, maybe here are better choices
     @env.send(:rule, lhs._pattern_ => [proc do |target|
       inputs = lhs._inputs_(target, input_ext)
-      extra_deps = extra_deps.map do |templ|
-        resolve_by_output(templ, lhs._parse_output_(target))
+      output = lhs._parse_output_(target)
+      plain_extra_deps = extra_deps.map do |templ|
+        resolve_by_output(templ, output)
       end
       # main data source and extra dependencies
-      inputs + extra_deps
+      inputs + plain_extra_deps
     end]) do |task|
       # rake continue task even if dependencies not met, we handle ourselves
       absence = task.prerequisites.find_index { |f| !File.exist? f }
