@@ -1,4 +1,4 @@
-require '../../../lib/raka'
+require 'raka'
 
 dsl = Raka.new(self, output_types: [:csv, :png, :txt], input_types: [:shp], lang: ['lang/python', 'lang/shell'])
 
@@ -27,7 +27,7 @@ PYTHON
 
 
 # log_ncores_size.txt
-txt.name['log_(\d+)_(\d+[TGM])'] = shell* %(
+txt.name['log_(\d+)_(\d+[TGM])'] = ["%{name1}.shp"] | shell* %(
     ruby prog.rb %{name0} %{name1}.shp > $@
 )
 
