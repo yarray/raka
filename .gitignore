@@ -6,5 +6,5 @@ contrib/demo/**/*.csv
 contrib/demo/**/*.table
 contrib/demo/**/*/out/
 _out/
-pkg/
+# pkg/
 .DS_Store
