@@ -1,0 +1,15 @@
+require 'logger'
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt], lang: ['lang/python'])
+
+txt.test = py(runner: 'python3')* <<-PYTHON
+    open('$@', 'w').write('python3')
+PYTHON
+
+# rake task
+task :default, [:ctx] => ['_out/test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'python3', File.read(t.prerequisites[0]).chomp
+    end
+end

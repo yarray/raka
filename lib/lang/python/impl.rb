@@ -5,7 +5,7 @@ require_relative '../../protocol'
 # Binding for python language, allow specifying imports and paths
 class Python
   # @implements LanguageImpl
-  def initialize(libs: [], paths: [])
+  def initialize(libs: [], paths: [], runner: 'python')
     common_aliases = {
       pandas: :pd,
       numpy: :np
@@ -17,6 +17,7 @@ class Python
       @imports.push("import #{name} as #{short}") if libs.include? name.to_s
     end
     @paths = ['import sys'] + paths.map { |path| "sys.path.append('#{path}')" }
+    @runner = runner
   end
 
   def build(code, _task)
@@ -24,7 +25,7 @@ class Python
   end
 
   def run_script(env, fname, _task)
-    run_cmd(env, "python #{fname}")
+    run_cmd(env, "#{@runner} #{fname}")
   end
 end
 

@@ -1,14 +1,14 @@
-**Raka** is a **DSL**(Domain Specific Language) on top of **Ra**ke for managing d**a**t**a** processing tasks. Unlike comman task runners like Make or Rake itself, Raka is specifically designed for data processing with improved pattern matching, multilingual support, scopes, and lots of conventions to prevent verbosity.
+**Raka** is a **DSL**(Domain Specific Language) on top of **Rak**e for defining and running d**a**t**a** processing workflows. Raka is specifically designed for data processing with improved pattern matching, scopes, language extensions and lots of conventions to prevent verbosity.
 
 ## Why Raka
 
-Data processing tasks can involve plenty of steps, each with its dependencies. Make is the classical tool to handle the situation but it had several shortcomings which soon became headaches when the number of tasks rises. Rake is better here but can still be improved from various aspects. Raka offers the following advantages:
+Data processing tasks can involve plenty of steps, each with its dependencies. Compared to bare Rake or the more classical Make, Raka offers the following advantages:
 
-1. Advanced pattern matching to maximize code reuse.
+1. Advanced pattern matching and template resolving to define general rules and maximize code reuse.
 2. Extensible and context-aware protocol architecture
 3. Multilingual. Other programming languages can be easily embedded
 4. Auto dependency and naming by conventions
-5. Support scopes
+5. Support scopes to ease comparative studies
 6. Terser syntax
 
 ... and more.

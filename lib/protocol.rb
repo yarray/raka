@@ -59,7 +59,6 @@ class LanguageProtocol
     env.logger.debug code
     script_text = @impl.build(wrap_template(remove_common_indent(code)), task)
     temp_script = create_tmp(script_text)
-    env.logger.debug temp_script
     @impl.run_script env, temp_script, task
     env.logger.debug script_text
   end
@@ -86,6 +85,7 @@ end
 
 # helper functions to implement LanguageImpl
 def run_cmd(env, cmd)
+  env.logger.debug(cmd)
   Open3.popen3(cmd) do |_stdin, stdout, stderr, _thread|
     env.logger.debug(stdout.read)
     err = stderr.read
@@ -95,9 +95,9 @@ end
 
 def pick_kwargs(klass, kwargs)
   param_ref = klass.instance_method(:initialize).parameters
-    .filter { |arg| arg.size == 2 && arg[0] == :key }
+    .select { |arg| arg.size == 2 && arg[0] == :key }
     .map { |arg| arg[1] }
-  kwargs.filter do |key, _value|
+  kwargs.select do |key, _value|
     param_ref.include? key
   end
 end
