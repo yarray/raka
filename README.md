@@ -21,18 +21,18 @@ Raka is a drop-in library for rake. Though rake is cross platform, raka may not 
 gem install rake
 ```
 
-The next step is to clone this project to local machine, and `require` the `dsl.rb` file in your Rakefile like (assuming this repository is cloned at the same place of the `Rakefile`)::
+The next step is to clone this project to local machine, cd to the directory, and install the gem:
 
-```ruby
-require_relative './raka/dsl'
+```bash
+gem install pkg/raka-0.1.0.gem
 ```
 
 ## For the Impatient
 
-First create a file named `Rakefile` and import & initialize the DSL
+First create a file named `main.raka` and import & initialize the DSL
 
 ```ruby
-require_relative './raka/dsl'
+require 'raka'
 
 dsl = DSL.new(self,
   output_types: [:txt, :table, :pdf, :idx],
