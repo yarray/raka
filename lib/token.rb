@@ -55,9 +55,8 @@ class Token
     end
     if !@inline_scope.nil? && !info[:output_scope].nil?
       segs = Regexp.new(@inline_scope).match(info[:output_scope]).captures
-      res[:output_scopes] = segs
+      res[:output_scope_captures] = segs
     end
-
     name_details = /^(\S+?)__(\S+)$/.match(info[:stem])
     res = if name_details
             res.merge(func: name_details[1], input_stem: name_details[2])
@@ -116,7 +115,10 @@ class Token
     # match the body part besides the scope (if not scoped), leading xxx__ and .ext of output
     info = _parse_output_(output)
     input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
-    [info.scope ? "#{info.scope}/#{input_stem}.#{ext}" : "#{input_stem}.#{ext}"]
+    auto_input = "#{input_stem}.#{ext}"
+    auto_input = "#{info.output_scope}/" + auto_input if info.output_scope
+    auto_input = "#{info.scope}/" + auto_input if info.scope
+    [auto_input]
   end
 
   def _scope_pattern_

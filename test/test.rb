@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Usage:
+# LOG_LEVEL=0 ruby test.rb -t protocol/python/runner.raka
+# ruby test.rb -l shell,python
+
 require 'fileutils'
 require 'test/unit'
 require 'rake'

@@ -17,6 +17,8 @@ end
 
 # compiles rule (lhs = rhs) to rake task
 class DSLCompiler
+  attr_reader :env
+
   # keep env as running environment of rake since we want to inject rules
   def initialize(env, options)
     @env = env
@@ -54,7 +56,7 @@ class DSLCompiler
     protect_percent_symbol text do |safe_text|
       safe_text = safe_text % (info.to_h.merge info.captures.to_h)
       safe_text = safe_text.gsub(/\$\(scope(\d+)\)/, '%{\1}') % array_to_hash(info.scopes)
-      safe_text.gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scopes)
+      safe_text.gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scope_captures)
     end
   end
 
@@ -78,6 +80,7 @@ class DSLCompiler
     return if actions.empty?
 
     task = dsl_task(lhs, task)
+    @env.logger.info "raking #{task.target}"
     unless task.scope.nil?
       folder = task.scope
       folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
