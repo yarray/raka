@@ -19,12 +19,12 @@ class Raka
     end
   end
 
-  def define_token_creator(ext)
+  def define_token_creator(ext, ext_alias = nil)
     # closures
     env = @env
     options = @options
     scopes = @scopes
-    @env.define_singleton_method ext do |*args|
+    @env.define_singleton_method(ext_alias || ext) do |*args|
       # Here the compiler are bound with @options so that when we change @options
       # using methods like scope in Rakefile, the subsequent rules defined will honor
       # the new settings
@@ -41,6 +41,7 @@ class Raka
     @env = env
     defaults = {
       output_types: [:csv], input_types: [],
+      type_aliases: {},
       scopes: [],
       lang: ['lang/shell'],
       user_lang: []
@@ -57,7 +58,7 @@ class Raka
 
     # These are where the dsl starts
     @options.output_types.each do |ext|
-      define_token_creator ext
+      define_token_creator(ext, @options.type_aliases[ext])
     end
   end
 

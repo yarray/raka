@@ -2,8 +2,9 @@
 
 # convenient patterns for matching
 module Pattern
-  WORD = '[^_]+'
-  ANY = '\S+'
+  WORD = '[^\s_]'
+  TOKEN = '(?!.*__)\w+'
+  ANY = '\w+'
 end
 
 # Context to preserve during the token chaining
@@ -151,7 +152,7 @@ class Token
     if symbol == Pattern::ANY # match-everything and not bound
       @chain.push pattern.to_s
     else
-      @chain.push "(?<#{symbol}>(#{pattern}))"
+      @chain.push "(?<#{symbol}>(#{pattern}\\w*))"
     end
     self
   end
