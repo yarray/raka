@@ -95,7 +95,7 @@ end
 
 def pick_kwargs(klass, kwargs)
   param_ref = klass.instance_method(:initialize).parameters
-    .select { |arg| arg.size == 2 && arg[0] == :key }
+    .select { |arg| arg.size == 2 && (arg[0] == :key || arg[0] == :keyreq) }
     .map { |arg| arg[1] }
   kwargs.select do |key, _value|
     param_ref.include? key

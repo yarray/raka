@@ -14,4 +14,3 @@ group :development do
   gem "rubocop", "~> 0.80.0"
   gem "reek", "~> 6.0"
 end
-

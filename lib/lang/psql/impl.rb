@@ -10,27 +10,32 @@ def bash(env, cmd)
       #{cmd}
     )
   )
-  puts code
+  # puts code
   env.send :sh, 'bash ' + create_tmp(code)
 end
 
 # postgresql protocol using psql, requires HOST, PORT, USER, DB
 class Psql
   # Sometimes we want to use the psql command with bash directly
-  def self.sh_cmd(scope)
+  def sh_cmd(scope)
+    cp = @conn_params
     env_vars = "PGOPTIONS='-c search_path=#{scope ? scope + ',' : ''}public' "
-    "#{env_vars} psql -h #{HOST} -p #{PORT} -U #{USER} -d #{DB} -v ON_ERROR_STOP=1"
+    "PGPASSWORD=#{cp.password} #{env_vars} psql -h #{cp.host} -p #{cp.port} -U #{cp.user} -d #{cp.db} -v ON_ERROR_STOP=1"
   end
 
-  def initialize(create:, params:)
+  def initialize(conn:, create: 'mview', params: {})
     @create = create
     @params = params
+    @conn_params = conn
   end
 
   def build(code, _)
     if @create.to_s == 'table'
       'DROP TABLE IF EXISTS :_name_;' \
         'CREATE TABLE :_name_ AS (' + code + ');'
+    elsif @create.to_s == 'mview'
+      'DROP MATERIALIZED VIEW IF EXISTS :_name_;' \
+        'CREATE MATERIALIZED VIEW :_name_ AS (' + code + ');'
     else
       code
     end
@@ -40,7 +45,7 @@ class Psql
     param_str = (@params || {}).map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
 
     bash env, %(
-    #{self.class.sh_cmd(task.scope)} #{param_str} -v _name_=#{task.stem} \
+    #{sh_cmd(task.scope)} #{param_str} -v _name_=#{task.stem} \
       -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     )
