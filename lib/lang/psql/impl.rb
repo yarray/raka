@@ -47,34 +47,4 @@ class Psql
   end
 end
 
-# A special LanguageProtocol, requires SRC_DIR and all Psql requirements
-class PsqlFile
-  def initialize(params: {}, script_file:, script_name:, **_kwargs)
-    @params = params
-    @script_file = script_file
-    @script_name = script_name
-    @extra_kwargs = kwargs
-  end
-
-  def call(env, task, &resolve)
-    @params = Hash[(@params || {}).map { |k, v| [k, resolve.call(v)] }]
-    script_file = if !@script_file.nil?
-                    resolve.call @script_file
-                  elsif !@script_name.nil?
-                    "#{SRC_DIR}/#{resolve.call @script_name}"
-                  else
-                    # infer from the task name
-                    "#{SRC_DIR}/#{task.stem}.sql"
-                  end
-
-    runner = Psql.new(params: params, **@extra_kwargs)
-    tmp_f = runner.create_tmp(runner.build(File.read(script_file).strip.chomp(';')))
-    runner.run_script env, tmp_f, task
-  end
-end
-
 creator :psql, Psql
-
-def psqlf(*args, **kwargs, &block)
-  [PsqlFile.new(*args, **kwargs, &block)]
-end
