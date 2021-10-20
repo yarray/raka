@@ -18,18 +18,22 @@ end
 class Psql
   # Sometimes we want to use the psql command with bash directly
   def sh_cmd(scope)
-    cp = @conn_params
+    c = @conn
     env_vars = "PGOPTIONS='-c search_path=#{scope ? scope + ',' : ''}public' "
-    "PGPASSWORD=#{cp.password} #{env_vars} psql -h #{cp.host} -p #{cp.port} -U #{cp.user} -d #{cp.db} -v ON_ERROR_STOP=1"
+    "PGPASSWORD=#{c.password} #{env_vars} psql -h #{c.host} -p #{c.port} -U #{c.user} -d #{c.db} -v ON_ERROR_STOP=1"
   end
 
-  def initialize(conn:, create: 'mview', params: {})
+  # 1. do not add required argument here, so psql.config will work or we can only use psql(conn: xxx).config
+  def initialize(conn: nil, create: 'mview', params: {})
     @create = create
     @params = params
-    @conn_params = conn
+    @conn = conn
   end
 
   def build(code, _)
+    # 2. lazily check the argument only when used
+    raise 'argument conn required' if @conn.nil?
+
     if @create.to_s == 'table'
       'DROP TABLE IF EXISTS :_name_;' \
         'CREATE TABLE :_name_ AS (' + code + ');'
