@@ -8,3 +8,4 @@ contrib/demo/**/*/out/
 _out/
 # pkg/
 .DS_Store
+node_modules/

@@ -66,6 +66,8 @@ class Token
           end
     res = res.merge(captures: OpenStruct.new(_captures_(output)))
     res[:name] = output
+    res[:output] = output
+    res[:output_stem] = info[:stem]
     OpenStruct.new res
   end
   # rubocop:enable Style/MethodLength
