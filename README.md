@@ -75,7 +75,7 @@ DB = 'osm'
 HOST = 'localhost'
 PORT = 5432
 
-def idx_this() [idx._('$(stem)')] end
+def idx_this() [idx._('$(output_stem)')] end
 
 dsl.scope :de
 
@@ -195,7 +195,7 @@ In some places of `rexpr`, templates can be written instead of strings, so that 
 | -------------- | ---------------------- | ------------- | ------------------------------- |
 | \$@            | output file            | \$^           | all dependecies (sep by spaces) |
 | \$<            | first dependency       | $0, $1, … \$i | ith depdency                    |
-| \$(scope)      | scope for current task | \$(stem)      | stem of the output file         |
+| \$(scope)      | scope for current task | \$(output_stem)      | stem of the output file         |
 | \$(input_stem) | stem of the input file |               |                                 |
 
 The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`

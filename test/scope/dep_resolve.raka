@@ -3,8 +3,8 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope :class1 do
-    txt('aspect(\d+)').test = [txt('$(scope0)_$(output_scope)').test('test_$(output_scope0)')] | run do |task|
-        File.write(task.name, task.deps[0])
+    txt('aspect(\d+)').test = [txt('$(rule_scope0)_$(target_scope)').test('test_$(target_scope0)')] | run do |task|
+        File.write(task.output, task.deps[0])
     end
 end
 

@@ -3,9 +3,9 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test.ind['\S+'].stat = [txt.aux, txt.aux2] | run do |task|
-    content = "#{task.name}:#{task.deps[0]}:#{task.deps[1]}:#{task.deps_str}:#{task.task.prerequisites[0]}:"
+    content = "#{task.output}:#{task.deps[0]}:#{task.deps[1]}:#{task.deps_str}:#{task.task.prerequisites[0]}:"
     content += "#{task.stem}:#{task.input_stem}:#{task.func}:#{task.captures.ind}"
-    File.write(task.name, content)
+    File.write(task.output, content)
 end
 
 txt._ = run do |task|

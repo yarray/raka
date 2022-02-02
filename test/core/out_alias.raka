@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: ['osm.pbf'], type_aliases: {'osm.pbf' => :osm_pbf})
 
 osm_pbf.test = run do |task|
-    File.write(task.name, 'Hello World')
+    File.write(task.output, 'Hello World')
 end
 
 # rake task

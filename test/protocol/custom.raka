@@ -10,7 +10,7 @@ txt.test = run do |task|
     orange 2
     banana 6
     TEXT
-    File.write(task.name, content)
+    File.write(task.output, content)
 end
 
 task :default, [:ctx] => ['_out/col_2__test.txt'] do |t, args|

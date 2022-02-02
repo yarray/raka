@@ -5,7 +5,7 @@ dsl = Raka.new(self, output_types: [:txt], lang: ['lang/python'])
 
 txt.test = py do |task|
     <<-PYTHON
-    out = "#{task.name}"
+    out = "#{task.output}"
     def fib(n):
         if n == 1:
             return 1

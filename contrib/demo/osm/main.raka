@@ -15,13 +15,13 @@ dsl.scopes :bw_de, :de
 
 csv.simple_building = shell* 'echo $(scope) 8080 && touch $@'
 csv.simple_building.year = [] | shell do |t|
-    "echo #{t.scope.capitalize} && touch #{t.name}"
+  "echo #{t.scope.capitalize} && touch #{t.output}"
 end
 
 csv.building['(simple|compound)_building'].unit['year|quarter'].geom = [csv._('%{unit}_timespots').round] | shell* %(
     echo %{building}
     echo %{building0}
-    echo $(scope).$(stem)
+    echo $(scope).$(output_stem)
     touch $@
 )
 #

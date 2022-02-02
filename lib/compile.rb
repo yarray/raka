@@ -48,15 +48,16 @@ class DSLCompiler
     text = target.respond_to?(:_template_) ? target._template_(info.scope).to_s : target.to_s
     text = text
       .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
-      .gsub('$(output_scope)', info.output_scope.nil? ? '' : info.output_scope)
-      .gsub('$(stem)', info.stem)
+      .gsub('$(target_scope)', info.target_scope.nil? ? '' : info.target_scope)
+      .gsub('$(output)', info.output)
+      .gsub('$(output_stem)', info.stem)
       .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
       .gsub('$@', info.name)
 
     protect_percent_symbol text do |safe_text|
       safe_text = safe_text % (info.to_h.merge info.captures.to_h)
-      safe_text = safe_text.gsub(/\$\(scope(\d+)\)/, '%{\1}') % array_to_hash(info.scopes)
-      safe_text.gsub(/\$\(output_scope(\d+)\)/, '%{\1}') % array_to_hash(info.output_scope_captures)
+      safe_text = safe_text.gsub(/\$\(rule_scope(\d+)\)/, '%{\1}') % array_to_hash(info.rule_scopes)
+      safe_text.gsub(/\$\(target_scope(\d+)\)/, '%{\1}') % array_to_hash(info.target_scope_captures)
     end
   end
 
@@ -69,6 +70,8 @@ class DSLCompiler
     text = text
       .gsub('$^', task.deps_str)
       .gsub('$<', task.input || '')
+      .gsub('$(deps)', task.deps_str)
+      .gsub('$(input)', task.input || '')
 
     protect_percent_symbol text do |safe_text|
       # add numbered auto variables like $0, $2 referring to the first and third deps
@@ -83,7 +86,7 @@ class DSLCompiler
     @env.logger.info "raking #{task.name}"
     unless task.scope.nil?
       folder = task.scope
-      folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
+      folder = File.join(task.scope, task.target_scope) unless task.target_scope.nil?
       FileUtils.makedirs(folder)
     end
     actions.each do |action|

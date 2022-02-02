@@ -4,9 +4,9 @@ class RakaTask
   attr_reader func: String?
   attr_reader input_stem: String?
   attr_reader scope: String?
-  attr_reader output_scope: String?
+  attr_reader target_scope: String?
   attr_reader scopes: Array[String]
-  attr_reader output_scope_captures: Array[String]
+  attr_reader target_scope_captures: Array[String]
   attr_reader captures: Hash[String, String]
   attr_reader deps: Array[String]
   attr_reader deps_str: String

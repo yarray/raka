@@ -46,17 +46,17 @@ class Token
   def _parse_output_(output)
     # xxx? is for minimal match
     out_pattern = %r{^((?<scope>\S+)/)?}.source
-    out_pattern += %r{(?<output_scope>#{@inline_scope})/}.source unless @inline_scope.nil?
+    out_pattern += %r{(?<target_scope>#{@inline_scope})/}.source unless @inline_scope.nil?
     out_pattern += /(?<stem>(\S+))(?<ext>\.[^\.]+)$/.source
     info = Regexp.new(out_pattern).match(output)
     res = Hash[info.names.zip(info.captures)]
     unless info[:scope].nil?
-      scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
-      res[:scopes] = scopes[1..-1].reverse
+      rule_scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
+      res[:rule_scopes] = rule_scopes[1..-1].reverse
     end
-    if !@inline_scope.nil? && !info[:output_scope].nil?
-      segs = Regexp.new(@inline_scope).match(info[:output_scope]).captures
-      res[:output_scope_captures] = segs
+    if !@inline_scope.nil? && !info[:target_scope].nil?
+      segs = Regexp.new(@inline_scope).match(info[:target_scope]).captures
+      res[:target_scope_captures] = segs
     end
     name_details = /^(\S+?)__(\S+)$/.match(info[:stem])
     res = if name_details
@@ -119,7 +119,7 @@ class Token
     info = _parse_output_(output)
     input_stem = /^\S+?__(\S+)$/.match(info.stem)[1]
     auto_input = "#{input_stem}.#{ext}"
-    auto_input = "#{info.output_scope}/" + auto_input if info.output_scope
+    auto_input = "#{info.target_scope}/" + auto_input if info.target_scope
     auto_input = "#{info.scope}/" + auto_input if info.scope
     [auto_input]
   end

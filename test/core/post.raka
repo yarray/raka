@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test = (run do |task|
-    File.write(task.name, '3, 2, 1, ')
+    File.write(task.output, '3, 2, 1, ')
 end) | [txt.hello, txt.world]
 
 txt.hello = run do |task|

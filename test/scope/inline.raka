@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt('topic').test = run do |task|
-    File.write(task.name, "#{task.output_scope},#{task.scope}")
+    File.write(task.output, "#{task.target_scope},#{task.scope}")
 end
 
 task :default, [:ctx] => ['_out/topic/test.txt'] do |t, args|

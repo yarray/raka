@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt('user').test = [txt('topic').test, txt('comment').test] | run do |task|
-    File.write(task.name, "#{task.deps[0]},#{task.deps[1]},#{task.scope}")
+    File.write(task.output, "#{task.deps[0]},#{task.deps[1]},#{task.scope}")
 end
 
 dsl.scope :topic, :comment do

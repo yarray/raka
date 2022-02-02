@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test['hello_(\d+)_(\S+)'] = run do |task|
-    File.write(task.name, task.captures.test + ',' + task.captures.test0 + ',' + task.captures.test1)
+    File.write(task.output, task.captures.test + ',' + task.captures.test0 + ',' + task.captures.test1)
 end
 
 # rake task

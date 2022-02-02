@@ -4,7 +4,7 @@ dsl = Raka.new(self, output_types: [:txt])
 
 dsl.scope :class1 do
     txt('topic').test = run do |task|
-        File.write(task.name, "#{task.output_scope},#{task.scopes[0]},#{task.scope}")
+        File.write(task.output, "#{task.target_scope},#{task.rule_scopes[0]},#{task.scope}")
     end
 end
 

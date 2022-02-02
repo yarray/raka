@@ -27,20 +27,20 @@ PYTHON
 
 
 # log_ncores_size.txt
-txt.name['log_(\d+)_(\d+[TGM])'] = ["%{name1}.shp"] | shell* %(
+txt.output['log_(\d+)_(\d+[TGM])'] = ['%{name1}.shp'] | shell * %(
     ruby prog.rb %{name0} %{name1}.shp > $@
 )
 
 # sizes_ncores.csv
 csv.ncores['ncores_(\d+)'] = (sizes.map { |s| txt._("log_%{ncores0}_#{s}") }) | py(script_template: python_templ) do |task|
     <<~PYTHON
-    aggregate("#{task.name}", #{task.deps.to_s}, #{sizes})
+    aggregate("#{task.output}", #{task.deps}, #{sizes})
     PYTHON
 end
 
 csv.sizes['sizes_(\d+[TGM])'] = (ncores.map { |n| txt._("log_#{n}_%{sizes0}") }) | py(script_template: python_templ) do |task|
     <<~PYTHON
-    aggregate("#{task.name}", #{task.deps.to_s}, #{ncores})
+    aggregate("#{task.output}", #{task.deps}, #{ncores})
     PYTHON
 end
 

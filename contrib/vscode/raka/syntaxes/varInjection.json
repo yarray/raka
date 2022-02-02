@@ -3,11 +3,11 @@
   "injectionSelector": "L:meta.embedded.block",
   "patterns": [
     {
-      "match": "\\$(@|<|\\^|\\d+|\\(((?:scope|stem|input_stem|output_scope)\\d*)\\))",
-      "name": "variable.auto.raka",
-      "captures": {
-        "0": { "name": "punctuation.definition.variable.raka" }
-      }
+        "match": "\\$(@|<|\\^|\\d+|\\(((?:scope|stem|input_stem|target_scope)\\d*)\\))",
+        "name": "variable.auto.raka",
+        "captures": {
+            "0": { "name": "punctuation.definition.variable.raka" }
+        }
     },
     {
       "begin": "%\\{",

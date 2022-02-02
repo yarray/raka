@@ -3,7 +3,7 @@ require '../lib/raka'
 Raka.new(self, output_types: [:txt])
 
 txt.test.stat = ['_out/$(input_stem)_aux.txt'] | run do |task|
-    File.write(task.name, task.deps[1])
+    File.write(task.output, task.deps[1])
 end
 
 txt.test = run do |task|

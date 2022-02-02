@@ -5,11 +5,11 @@ dsl = Raka.new(self, output_types: [:txt])
 txt.test = [
     # this is rake task
     Proc.new do |env, task, &resolve|
-        File.write(task.name, resolve.call('$(stem)_aaa', task))
+    File.write(task.output, resolve.call('$(output_stem)_aaa', task))
     end,
     # this is raka task
     RubyP.new do |task|
-        File.write(task.name, task.ext, mode: 'a')
+      File.write(task.output, task.ext, mode: 'a')
     end
 ]
 

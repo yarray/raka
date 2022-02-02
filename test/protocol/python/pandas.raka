@@ -16,7 +16,7 @@ csv.test = run do |task|
         banana,6
         peach,2
     )
-    File.write(task.name, content)
+    File.write(task.output, content)
 end
 
 # rake task

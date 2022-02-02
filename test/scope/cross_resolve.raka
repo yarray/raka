@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt('user').test['test_(\d+)_(\d+)'] = [txt('topic%{test0}').test, txt('group%{test1}').test] | run do |task|
-    File.write(task.name, "#{task.deps[0]},#{task.deps[1]}")
+    File.write(task.output, "#{task.deps[0]},#{task.deps[1]}")
 end
 
 dsl.scope :topic42, :group11 do

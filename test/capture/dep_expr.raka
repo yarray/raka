@@ -3,7 +3,7 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt])
 
 txt.test['test_(\d+)_(\d+)'] = [txt.test('test_%{test0}'), txt.test('test_%{test1}')] | run do |task|
-    File.write(task.name, "#{task.deps[0]},#{task.deps[1]}")
+    File.write(task.output, "#{task.deps[0]},#{task.deps[1]}")
 end
 
 txt.test_42 = run do |task|
