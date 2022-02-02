@@ -17,7 +17,7 @@ Juwelier::Tasks.new do |gem|
   gem.homepage = "http://github.com/yarray/raka"
   gem.license = "MIT"
   gem.summary = %Q{Rake for data}
-  gem.description = %Q{A extensible, concise and light weight DSL on Rake to automate data processing tasks}
+  gem.description = %Q{An extensible, concise and light weight DSL on Rake to automate data processing tasks}
   gem.email = "08to09@gmail.com"
   gem.authors = ["yarray"]
   gem.files = Dir['README.md', 'VERSION', 'lib/**/*']

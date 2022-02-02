@@ -8,7 +8,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'raka'
-  s.version = '0.2.1'
+  s.version = '0.2.3'
   s.required_ruby_version = '>= 2.3.0'
 
   if s.respond_to? :required_rubygems_version=
@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.authors = ['yarray']
   s.date = '2021-04-26'
-  s.description = 'A extensible, concise and light weight DSL on Rake to automate data processing tasks'
+  s.description = 'An extensible, concise and light weight DSL on Rake to automate data processing tasks'
   s.email = '08to09@gmail.com'
   s.extra_rdoc_files = [
     'LICENSE',
