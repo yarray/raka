@@ -80,7 +80,7 @@ class DSLCompiler
     return if actions.empty?
 
     task = dsl_task(lhs, task)
-    @env.logger.info "raking #{task.target}"
+    @env.logger.info "raking #{task.name}"
     unless task.scope.nil?
       folder = task.scope
       folder = File.join(task.scope, task.output_scope) unless task.output_scope.nil?
