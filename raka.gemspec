@@ -8,7 +8,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'raka'
-  s.version = '0.1.1'
+  s.version = '0.2.1'
   s.required_ruby_version = '>= 2.3.0'
 
   if s.respond_to? :required_rubygems_version=
