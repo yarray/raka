@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'English'
+require 'open3'
+
+def detect_main
+  # check predefined files
+  main_file_cands = ['Rakefile.raka', 'rakefile.raka', 'main.raka']
+  main_file_cands.each do |cand|
+    return cand if File.exist?(cand)
+  end
+
+  # if only one .raka file, use it as main
+  rakas = Dir.glob('*.raka')
+  return rakas[0] if rakas.length == 1
+end
+
+entry = detect_main
+
+options = { rake: {}, raka_finished: false }
+def set_option(opts, key, value)
+  if opts[:raka_finished]
+    opts[:rake][key] = value
+  else
+    opts[key] = value
+  end
+end
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: raka [options] <output> -- [rake options]'
+
+  opts.on('-v', '--[no-]verbose', 'Run verbosely') do |v|
+    set_option(options, :verbose, v)
+  end
+end
+
+if ARGV.empty?
+  puts parser.help
+  exit(1)
+end
+both_args = ARGV.join(' ').split(' -- ')
+puts ARGV.length
+self_args = both_args[0].split(/\s+/)
+parser.parse!(self_args)
+extra_args = both_args[1] | ''
+
+env = if options[:verbose]
+        'LOG_LEVEL=0 '
+      else
+        ''
+      end
+targets = self_args.join(' ')
+cmd = "#{env}rake -f #{entry}  #{extra_args} #{targets}"
+puts cmd
+output, err, code = Open3.capture3(cmd)
+if code == 0
+  # TOOD: if empty, print all exist
+  puts output unless output.empty?
+else
+  puts 'Error: rake returns the following information:'
+end
+puts err

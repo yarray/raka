@@ -21,7 +21,8 @@ Juwelier::Tasks.new do |gem|
   gem.description = %Q{An extensible, concise and light weight DSL on Rake to automate data processing tasks}
   gem.email = "08to09@gmail.com"
   gem.authors = ["yarray"]
-  gem.files = Dir['README.md', 'VERSION', 'lib/**/*']
+  gem.files = Dir['README.md', 'VERSION', 'lib/**/*', 'bin/**/*']
+  gem.executables = ['raka']
 
   # dependencies defined in Gemfile
 end
