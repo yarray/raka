@@ -112,6 +112,9 @@ function activate(context) {
     );
     const autoVarProvider = vscode.languages.registerCompletionItemProvider('ruby', {
         provideCompletionItems(document, position) {
+            if (document.lineAt(position.line).text[position.character - 1] !== '$') {
+                return;
+            }
             const vars = [
                 ['@', '$@: the output file'],
                 ['^', '$^: the dependencies, concated by ",", not including input'],

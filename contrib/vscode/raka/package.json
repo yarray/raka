@@ -18,7 +18,7 @@
           "ruby"
         ],
         "extensions": [
-          "raka"
+          ".raka"
         ],
         "configuration": "./language-configuration.json"
       }

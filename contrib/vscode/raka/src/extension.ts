@@ -137,6 +137,9 @@ export function activate(context: vscode.ExtensionContext) {
                 document: vscode.TextDocument,
                 position: vscode.Position
             ) {
+				if (document.lineAt(position.line).text[position.character - 1] !== '$') {
+					return;
+				}
                 const vars = [
                     ['@', '$@: the output file'],
                     ['^', '$^: the dependencies, concated by ",", not including input'],
