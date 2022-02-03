@@ -14,6 +14,7 @@ require 'juwelier'
 Juwelier::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://guides.rubygems.org/specification-reference/ for more options
   gem.name = "raka"
+  gem.required_ruby_version = '>= 2.3.0'
   gem.homepage = "http://github.com/yarray/raka"
   gem.license = "MIT"
   gem.summary = %Q{Rake for data}
