@@ -43,7 +43,7 @@ both_args = ARGV.join(' ').split(' -- ')
 puts ARGV.length
 self_args = both_args[0].split(/\s+/)
 parser.parse!(self_args)
-extra_args = both_args[1] | ''
+extra_args = both_args[1] || ''
 
 env = if options[:verbose]
         'LOG_LEVEL=0 '
@@ -51,7 +51,7 @@ env = if options[:verbose]
         ''
       end
 targets = self_args.join(' ')
-cmd = "#{env}rake -f #{entry}  #{extra_args} #{targets}"
+cmd = "#{env}rake -f #{entry} #{extra_args} #{targets}"
 puts cmd
 output, err, code = Open3.capture3(cmd)
 if code == 0
