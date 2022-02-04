@@ -2,7 +2,7 @@
 
 ## Installation
 
-Raka is a library based on rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. To use raka, one has to install ruby and rake first. Ruby is available for most \*nix systems including Mac OSX so the only task is to install raka like:
+Raka is a library based on rake. Though rake is cross platform, raka may not work on Windows since it relies some shell facilities. Ruby is available for most \*nix systems including Mac OSX so the only task is to install raka like:
 
 ```bash
 gem install raka
@@ -16,16 +16,16 @@ First create a file named `main.raka` and import & initialize the DSL
 require 'raka'
 
 dsl = DSL.new(self,
-  output_types: [:txt, :table, :pdf, :idx],
-  input_types: [:txt, :table]
+  output_types: [:txt],
+  input_types: [:txt]
 )
 ```
 
 Then the code below will define two simple rules:
 
 ```ruby
-txt.sort.first50 = shell* "cat sort.txt | head -n 50 > $@"
-txt.sort = [txt.input] | shell* "cat $< | sort -rn > $@"
+txt._.first50 = shell* "cat $< | head -n 50 > $@"
+txt.sort = [txt.input] | shell* "cat $(dep0) | sort -rn > $@"
 ```
 
 For testing let's prepare an input file named `input.txt`:
@@ -34,31 +34,46 @@ For testing let's prepare an input file named `input.txt`:
 seq 1000 > input.txt
 ```
 
-We can then invoke `rake first50.txt`, the script will read data from _input.txt_, sort the numbers descendingly and get the first 50 lines.
+Invoke:
+
+```bash 
+raka first50__sort.txt
+```
+
+Raka will read data from *input.txt*, sort the numbers descendingly and copy the first 50 lines to *first50__sort.txt*.
 
 The workflow here is as follows:
 
-1. Try to find _first50\_\_sort.txt_: not exists
-2. Rule `txt.sort.first50` matched
-3. For rule `txt.sort.first50`, find input file _sort.txt_ or _sort.table_. Neither exists
-4. Rule `txt.sort` matched
-5. Rule `txt.sort` has no input but a depended target `txt.input`
-6. Find file _input.txt_ or _input.table_. Use the former
-7. Run rule `txt.sort` and create _sort.txt_
-8. Run rule `txt.sort.first50` and create _first50\_\_sort.txt_
+1. Try to find *first50__sort.txt*: not exists.
+2. Rule with target `txt.sort.first50` matched.
+3. Find input file *sort.txt*, not exists.
+4. Rule with target `txt.sort` matched.
+5. This rule has no input but a depended target `txt.input`.
+6. File *input.txt* exists. Use it.
+7. Run rule `txt.sort` and create *sort.txt*.
+8. Run rule `txt.sort.first50` and create *first50__sort.txt*
 
-This illustrates some basic ideas but may not be particularly interesting. Following is a much more sophisticated example from real world research which covers more features.
+We may want to skip the sort step, and invoke:
+
+```bash
+raka first50__input.txt
+```
+
+Raka will read data from *input.txt* and copy the first 50 lines to *first50__input.txt*.
+
+This illustrates some basic ideas but may not be particularly interesting. Following is a  more sophisticated example extracted from real world research which covers more features.
 
 ```ruby
-SRC_DIR = File.absolute_path 'src'
 USER = 'postgres'
-DB = 'osm'
+DB = 'test'
 HOST = 'localhost'
 PORT = 5432
 
+dsl = DSL.new
+
 def idx_this() [idx._('$(output_stem)')] end
 
-dsl.scope :de
+dsl.scope :cn, :de
 
 idx._ = psqlf(script_name: '$stem_idx.sql')
 pdf.buildings.func['(\S+)_graph'] = r(:graph)* %[
