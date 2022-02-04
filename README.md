@@ -123,11 +123,11 @@ rule ::= target "=" (dependencies "|")* protocol ("|" post_target)*
 
 target ::= ext "." ltoken ("." ltoken)*
 
+dependencies ::= "[]" | "[" dependency ("," dependency)* "]"
+
 dependency ::= rexpr | template
 
 post_target ::= rexpr | template
-
-dependencies ::= "[]" | "[" dependency ("," dependency)* "]"
 
 rexpr ::= ext "." rtoken ("." rtoken)*
 
@@ -136,28 +136,48 @@ rtoken ::= word | word "(" template ")"
 
 word ::= ("_" | letter) ( letter | digit | "_" )*
 
-protocol ::= ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK ) | "run" BLOCK
+protocol ::= ("shell" | "r" | "psql" | "py" ) ("*" template | block ) | "run" block
 ```
 
 The corresponding railroad diagrams are:
 
+**rule**
+
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rule.svg)
+
+**target**
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/target.svg)
 
+**dependencies**
+
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/dependencies.svg)
+
+**dependency**
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/dependency.svg)
 
+**post_target_**
+
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/post_target.svg)
+
+**rexpr**
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rexpr.svg)
 
+**ltoken**
+
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/ltoken.svg)
+
+**rtoken**
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rtoken.svg)
 
+**word**
+
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/word.svg)
+
+**action**
 
 ![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/protocol.svg)
 
@@ -171,13 +191,13 @@ The definition is concise but several details are omitted for simplicity:
 
 ### Pattern matching and template resolving
 
-When defined a rule like `lexpr = rexpr`, the left side represents a pattern and the right side contains specifications for extra dependecies, actions and some targets to create thereafter. When raking a target file, the left sides of the rules will be examined one by one until a rule is matched. The matching process based on Regex also support named captures so that some varibales can be bound for use in the right side.
+When defined a rule like `target = <specification>`, the left side represents a pattern and the right side contains specifications for extra dependecies, actions and some targets to create thereafter. When raking a target file, the left sides of the rules will be examined one by one until a rule is matched. The matching process based on Regex also support named captures so that some varibales can be extracted for use in the right side.
 
-The specifications on the right side of a rule can be incomplete from various aspects, that is, they can contains some templates. The "holes" in the templates will be fulfilled by automatic variables and variables bounded when matching the left side.
+The specifications on the right side of a rule can contain templates. The "holes" in the templates will be fulfilled by automatic variables and variables captured when matching the left side.
 
 #### Pattern matching
 
-To match a given _file_ with a `lexpr`, asides the extension, the substrings of the file name between "\_\_" are mapped to tokens separated by `.`, in reverse order. After that, each substring is matched to the corresponding token or the regex in `[]`. For example, the rule
+To match a given _file_ with a `target`, the extension will be matched first. The substrings of the file name between "\_\_" are mapped to tokens separated by `.`, in reverse order. After that, each substring is matched to the corresponding token or the regex in `[]`. For example, the rule
 
 ```ruby
 pdf.buildings.indicator['\S+'].top['top_(\d+)']
@@ -192,26 +212,28 @@ can match "top_50\_\_node_num\_\_buildings.pdf". The logical process is:
    - `top_(\d+) ~ top_50`
 3. Two levels of captures are made. First, 'node_num' is captured as `indicator`, 'top_50' is captured as `top`; Second, '50' is captured as `top0` since `\d+` is wrapped in parenthesis and is the first.
 
-One can write special token `_` or `something[]` if the captured value is useful later, as the syntax sugar of `something['\S+']`.
+One can write special token `_` to match any token. Since raka uses prefix matching, something like `token0['']` can also match any token and capture it in `token0` in addition. End-of-line symbol `$` can be used to match the whole token, e.g., `token0['word$']` will not match `word_bench`.
 
 #### Template resolving
 
 In some places of `rexpr`, templates can be written instead of strings, so that it can represent different values at runtime. There are two types of variables that can be used in templates. The first is automatic variables, which is just like `$@` in Make or `task.name` in Rake. We even preserve some Make conventions for easier migrations. All automatic varibales begin with `$`. The possible automatic variables are:
 
-| symbol         | meaning                | symbol          | meaning                         |
-| -------------- | ---------------------- | --------------- | ------------------------------- |
-| \$@            | output file            | \$^             | all dependecies (sep by spaces) |
-| \$<            | first dependency       | $0, $1, … \$i   | ith depdency                    |
-| \$(scope)      | scope for current task | \$(output_stem) | stem of the output file         |
-| \$(input_stem) | stem of the input file |                 |                                 |
+| symbol                                    | meaning                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| \$@, \$(output)                           | the output file                                                                                        |
+| \$<, \$(input)                            | the input file                                                                                         |
+| \$^, \$(deps)                             | all dependecies concated by comma (without input)                                                      |
+| \$(dep0), \$(dep1), ...                   | the i-th depdency                                                                                      |
+| \$(input_stem)                            | stem of the input file                                                                                 |
+| \$(output_stem)                           | stem of the output file                                                                                |
+| \$(scope)                                 | scope for current task, i.e. the common directory for output, input and dependencies                   |
+| \$(target_scope)                          | the inline scope defined in target                                                                     |
+| \$(target_scope0), \$(target_scope1), ... | the i-th captured value by inline scope defined in target                                              |
+| \$(rule_scope0), \$(rule_scope1), ...     | the i-th scope defined in rule-level by nested calls of the dsl.scope function (i is larger insideout) |
 
-The other type of variables are those bounded during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
+The other type of variables are those captured during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
 
-The replacement of variables happen before any process to the template string. So do not include the symbols for automatic variables or `%{<anything>}` in templates.
-
-Templates can happen in various places. For depdencies and post jobs, tokens with parenthesis can wrap in templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Where templates can be applied in actions depends on the protocols and will be explained later in the [Protocols](###protocols) section
-
-### Scope
+Templates can happen in various places. For depdencies and post targets, tokens with parenthesis can contain templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted with an underscore. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Templates can also be applied in actions but it depends on the implementations of protocols.
 
 ### Protocols
 
@@ -256,6 +278,8 @@ pdf.graph = ...
 which will generate data.csv and graph.pdf
 
 The `input_types` involves the strategy to find inputs. For example, raka will try to find both *numbers.csv* and *numbers.table* for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
+
+### Scope
 
 ## Rakefile Template
 
