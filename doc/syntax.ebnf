@@ -1,10 +1,12 @@
-rule = lexpr "=" {target_list "|"} protocol {"|" target_list};
+rule = target "=" {dependencies "|"} protocol {"|" post_target};
 
-target = rexpr | template;
+dependency = rexpr | template;
 
-target_list = "[]" | "[" target {"," target} "]";
+post_target = rexpr | template;
 
-lexpr = ext "." ltoken {"." ltoken};
+dependencies = "[]" | "[" dependency {"," dependency} "]";
+
+target = ext "." ltoken {"." ltoken};
 rexpr = ext "." rtoken {"." rtoken};
 
 ltoken = word | word "[" pattern "]";
@@ -12,5 +14,4 @@ rtoken = word | word "(" template ")";
 
 word = ("_" | letter) { letter | digit | "_" };
 
-protocol = ("shell" | "r" | "psql") ("*" template | BLOCK )
-         | "psqlf" | "psqlf" "(" HASH ")";
+protocol = ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK );
