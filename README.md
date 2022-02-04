@@ -116,46 +116,50 @@ Compared to more comlex, GUI-based solutions (perhaps classified as scientific-w
 
 ### Syntax of Rules
 
-It is possible to use Raka with little knowledge of ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (EBNF form):
+It is possible to use Raka with little knowledge of ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (W3C EBNF form):
 
 ```ebnf
-rule = lexpr "=" {target_list "|"} protocol {"|" target_list};
+rule ::= target "=" (dependencies "|")* protocol ("|" post_target)*
 
-target = rexpr | template;
+target ::= ext "." ltoken ("." ltoken)*
 
-target_list = "[]" | "[" target {"," target} "]";
+dependency ::= rexpr | template
 
-lexpr = ext "." {ltoken "."} ltoken;
-rexpr = ext "." rtoken {"." rtoken};
+post_target ::= rexpr | template
 
-ltoken = word | word "[" pattern "]";
-rtoken = word | word "(" template ")";
+dependencies ::= "[]" | "[" dependency ("," dependency)* "]"
 
-word = ("_" | letter) { letter | digit | "_" };
+rexpr ::= ext "." rtoken ("." rtoken)*
 
-protocol = ("shell" | "r" | "psql") ("*" template | BLOCK )
-         | "psqlf" | "psqlf" "(" HASH ")";
+ltoken ::= word | word "[" pattern "]"
+rtoken ::= word | word "(" template ")"
+
+word ::= ("_" | letter) ( letter | digit | "_" )*
+
+protocol ::= ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK ) | "run" BLOCK
 ```
 
 The corresponding railroad diagrams are:
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rule.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rule.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/target.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/target_list.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/dependencies.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/lexpr.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/dependency.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rexpr.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/post_target.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/ltoken.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rexpr.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/rtoken.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/ltoken.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/word.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/rtoken.svg)
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/figures/protocol.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/word.svg)
+
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/protocol.svg)
 
 The definition is concise but several details are omitted for simplicity:
 

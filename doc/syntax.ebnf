@@ -1,17 +1,18 @@
-rule = target "=" {dependencies "|"} protocol {"|" post_target};
+rule ::= target "=" (dependencies "|")* protocol ("|" post_target)*
 
-dependency = rexpr | template;
+target ::= ext "." ltoken ("." ltoken)*
 
-post_target = rexpr | template;
+dependency ::= rexpr | template
 
-dependencies = "[]" | "[" dependency {"," dependency} "]";
+post_target ::= rexpr | template
 
-target = ext "." ltoken {"." ltoken};
-rexpr = ext "." rtoken {"." rtoken};
+dependencies ::= "[]" | "[" dependency ("," dependency)* "]"
 
-ltoken = word | word "[" pattern "]";
-rtoken = word | word "(" template ")";
+rexpr ::= ext "." rtoken ("." rtoken)*
 
-word = ("_" | letter) { letter | digit | "_" };
+ltoken ::= word | word "[" pattern "]"
+rtoken ::= word | word "(" template ")"
 
-protocol = ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK );
+word ::= ("_" | letter) ( letter | digit | "_" )*
+
+protocol ::= ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK ) | "run" BLOCK

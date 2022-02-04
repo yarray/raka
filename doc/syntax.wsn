@@ -1,0 +1,17 @@
+rule = target "=" {dependencies "|"} protocol {"|" post_target} .
+
+dependency = rexpr | template .
+
+post_target = rexpr | template .
+
+dependencies = "[]" | "[" dependency {"," dependency} "]" .
+
+target = ext "." ltoken {"." ltoken} .
+rexpr = ext "." rtoken {"." rtoken} .
+
+ltoken = word | word "[" pattern "]" .
+rtoken = word | word "(" template ")" .
+
+word = ("_" | letter) { letter | digit | "_" } .
+
+protocol = ("shell" | "r" | "psql" | "py" ) ("*" template | BLOCK ) .

@@ -1,33 +1,7 @@
-# The afm files of texlive 2015 changes naming strategy and contains no Times-Roman.afm which is searched by ebnf2ps
-EBNF_ENV=AFMPATH=~/others/fonts/afm/ RGBPATH=/opt/X11/share/X11
-FONT=Helvetica
-FONT_SCALE=12
-DIM=1000
+# this will also generate all svgs
+all: syntax.md
 
-all: \
-	figures/rule.svg \
-	figures/target.svg \
-	figures/target_list.svg \
-	figures/lexpr.svg \
-	figures/rexpr.svg \
-	figures/ltoken.svg \
-	figures/rtoken.svg \
-	figures/word.svg \
-	figures/protocol.svg
-
-
-figures/%.eps : syntax.ebnf
-	$(EBNF_ENV) ebnf2ps \
-		-borderDistX $(DIM) -borderDistY $(DIM) \
-		-tScale $(FONT_SCALE) -ntScale $(FONT_SCALE) -titleScale 15 \
-		-lineWidth 80 -arrowSize 300 \
-		-tFont "$(FONT)" -ntFont "$(FONT)" \
-		-tBg "Gold" -ntBg "Cornsilk" \
-		$^ $*
-	mv $*.eps $@
-
-figures/%.pdf : figures/%.eps
-	epstopdf $< -o $@
-
-figures/%.svg : figures/%.pdf
-	pdf2svg $< $@
+# use grammkit to generate svgs, install via npm install grammkit
+# it is a W3C ebnf file (https://www.w3.org/TR/2004/REC-xml11-20040204/#sec-notation), not in ISO ebnf format (with massive comma and outdated)
+syntax.md: syntax.ebnf
+	grammkit -f ebnf -t md $<
