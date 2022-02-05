@@ -36,7 +36,7 @@ seq 1000 > input.txt
 
 Invoke:
 
-```bash 
+```bash
 raka first50__sort.txt
 ```
 
@@ -129,7 +129,9 @@ Compared to more comlex, GUI-based solutions (perhaps classified as scientific-w
 
 ## Documentation
 
-### Syntax of Rules
+### Conceptual Model
+
+### Syntax Definition
 
 It is possible to use Raka with little knowledge of ruby / rake, though minimal understandings are highly recommended. The formal syntax of rule can be defined as follows (W3C EBNF form):
 
@@ -250,7 +252,7 @@ The other type of variables are those captured during pattern matching,which can
 
 Templates can happen in various places. For depdencies and post targets, tokens with parenthesis can contain templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted with an underscore. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Templates can also be applied in actions but it depends on the implementations of protocols.
 
-### Protocols
+### Actions and protocols
 
 Currently Raka support 4 lang: shell, psql, r and psqlf.
 

@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+require 'raka'
+
+dsl = Raka.new(self,
+               output_types: %i[csv md pdf],
+               input_types: %i[csv md],
+               lang: ['lang/shell', 'lang/python'])
+
+py_template = <<~PYTHON
+  import os.path
+  import pandas as pd
+
+  def write_variety(input, output, variety):
+    print(variety)
+    folder = os.path.dirname(output)
+    if len(folder) > 0:
+      os.makedirs(folder, exist_ok=True)
+    df = pd.read_csv(input)
+    df[df['variety'] == variety.capitalize()].to_csv(output)
+  <code>
+PYTHON
+py.config script_template: py_template
+
+groups = %i[virginica versicolor setosa]
+
+csv(groups.join('|')).iris =
+  py* %(write_variety('iris.csv', '$@', '$(target_scope)'))
+
+dsl.scope(*groups) do
+  pdf.iris.plot['plot_(\S+)_(\S+)'] = py do |rask|
+    <<-PYTHON
+    import seaborn as sns
+    from matplotlib import pyplot as plt
+
+    df = pd.read_csv('#{rask.input}')
+    ax = sns.histplot(x=df['#{rask.captures.plot0}.#{rask.captures.plot1}'])
+    ax.set_xlabel('#{rask.captures.plot0} #{rask.captures.plot1}')
+    ax.set_ylabel('frequency')
+    plt.savefig('#{rask.output}')
+    PYTHON
+  end
+end
+
+task figures: (groups.product(%w[sepal petal], %w[length width]).map do |info|
+  "_out/#{info[0]}/plot_#{info[1]}_#{info[2]}__iris.pdf"
+end)

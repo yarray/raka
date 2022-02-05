@@ -33,6 +33,14 @@ parser = OptionParser.new do |opts|
   opts.on('-v', '--[no-]verbose', 'Run verbosely') do |v|
     set_option(options, :verbose, v)
   end
+
+  opts.on('-F', '--[no-]force', 'Run even when up to date') do |f|
+    set_option(options, :force, f)
+  end
+
+  opts.on('-j', '--jobs JOBS', Integer, 'Run in parallel') do |n|
+    set_option(options, :jobs, n)
+  end
 end
 
 if ARGV.empty?
@@ -40,10 +48,9 @@ if ARGV.empty?
   exit(1)
 end
 both_args = ARGV.join(' ').split(' -- ')
-puts ARGV.length
 self_args = both_args[0].split(/\s+/)
 parser.parse!(self_args)
-extra_args = both_args[1] || ''
+extra_args = (both_args[1] || ' ').lstrip
 
 env = if options[:verbose]
         'LOG_LEVEL=0 '
@@ -51,13 +58,29 @@ env = if options[:verbose]
         ''
       end
 targets = self_args.join(' ')
-cmd = "#{env}rake -f #{entry} #{extra_args} #{targets}"
+cmd = ''
+cmd += "rm -f #{targets}; " if options[:force]
+opt_str = "-f #{entry}"
+opt_str += " -m -j #{options[:jobs]}" if options.key?(:jobs)
+cmd += "#{env}rake #{opt_str} #{extra_args}#{targets}"
 puts cmd
-output, err, code = Open3.capture3(cmd)
-if code == 0
-  # TOOD: if empty, print all exist
-  puts output unless output.empty?
-else
-  puts 'Error: rake returns the following information:'
+output = []
+ro, out = IO.pipe
+re, err = IO.pipe
+pid = fork do
+  status = system(cmd, out: out, err: err)
+  puts 'Error: rake returns the following information:' unless status
+  exit($CHILD_STATUS.exitstatus)
 end
-puts err
+out.close
+err.close
+ro.each_line do |l|
+  puts l
+  output << l.chomp
+end
+re.each_line { |l| puts l; }
+
+Process.wait(pid)
+if output.empty? && $CHILD_STATUS.exitstatus == 0
+  puts 'All targets are up to date'
+end
