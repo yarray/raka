@@ -8,7 +8,7 @@
 
 ![rule](./syntax/rule.svg)
 
-References: [target](#target), [dependencies](#dependencies), [protocol](#protocol), [post_target](#post_target)
+References: [target](#target), [dependencies](#dependencies), [action](#action), [post_target](#post_target)
 
 ### target
 
@@ -16,6 +16,13 @@ References: [target](#target), [dependencies](#dependencies), [protocol](#protoc
 
 Used by: [rule](#rule)
 References: [ext](#ext), [ltoken](#ltoken)
+
+### dependencies
+
+![dependencies](./syntax/dependencies.svg)
+
+Used by: [rule](#rule)
+References: [dependency](#dependency)
 
 ### dependency
 
@@ -30,13 +37,6 @@ References: [rexpr](#rexpr), [template](#template)
 
 Used by: [rule](#rule)
 References: [rexpr](#rexpr), [template](#template)
-
-### dependencies
-
-![dependencies](./syntax/dependencies.svg)
-
-Used by: [rule](#rule)
-References: [dependency](#dependency)
 
 ### rexpr
 
@@ -66,10 +66,10 @@ References: [word](#word), [template](#template)
 Used by: [ltoken](#ltoken), [rtoken](#rtoken)
 References: [letter](#letter), [digit](#digit)
 
-### protocol
+### action
 
-![protocol](./syntax/protocol.svg)
+![action](./syntax/action.svg)
 
 Used by: [rule](#rule)
-References: [template](#template), [BLOCK](#BLOCK)
+References: [template](#template), [block](#block)
 

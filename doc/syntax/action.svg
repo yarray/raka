@@ -102,7 +102,7 @@ svg.railroad-diagram rect {
 <path d="M180 61h46"></path>
 <path d="M286 61h46"></path>
 <rect x="226" y="50" width="60" height="22"></rect>
-<text x="256" y="65">BLOCK</text>
+<text x="256" y="65">block</text>
 </g>
 <path d="M332 61a10 10 0 0 0 10 -10v-10a10 10 0 0 1 10 -10"></path>
 </g>
@@ -125,7 +125,7 @@ svg.railroad-diagram rect {
 <path d="M208 151h0"></path>
 <path d="M268 151h0"></path>
 <rect x="208" y="140" width="60" height="22"></rect>
-<text x="238" y="155">BLOCK</text>
+<text x="238" y="155">block</text>
 </g>
 <path d="M268 151h10"></path>
 </g>

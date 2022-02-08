@@ -3,8 +3,8 @@
 require 'raka'
 
 dsl = Raka.new(self,
-               output_types: %i[csv md pdf],
-               input_types: %i[csv md],
+               output_types: %i[csv pdf],
+               input_types: %i[csv],
                lang: ['lang/shell', 'lang/python'])
 
 py_template = <<~PYTHON
@@ -17,15 +17,18 @@ py_template = <<~PYTHON
     if len(folder) > 0:
       os.makedirs(folder, exist_ok=True)
     df = pd.read_csv(input)
-    df[df['variety'] == variety.capitalize()].to_csv(output)
+    df[df['class'] == variety].to_csv(output)
+
   <code>
 PYTHON
 py.config script_template: py_template
 
-groups = %i[virginica versicolor setosa]
+groups = %i[virginica versicolor]
+
+csv.iris_all = shell* %(curl -L https://datahub.io/machine-learning/iris/r/iris.csv > $@)
 
 csv(groups.join('|')).iris =
-  py* %(write_variety('iris.csv', '$@', '$(target_scope)'))
+  [csv.iris_all] | py* %(write_variety('$<', '$@', 'Iris-$(target_scope)'))
 
 dsl.scope(*groups) do
   pdf.iris.plot['plot_(\S+)_(\S+)'] = py do |rask|
@@ -34,9 +37,8 @@ dsl.scope(*groups) do
     from matplotlib import pyplot as plt
 
     df = pd.read_csv('#{rask.input}')
-    ax = sns.histplot(x=df['#{rask.captures.plot0}.#{rask.captures.plot1}'])
-    ax.set_xlabel('#{rask.captures.plot0} #{rask.captures.plot1}')
-    ax.set_ylabel('frequency')
+    ax = sns.displot(x=df['#{rask.captures.plot0}#{rask.captures.plot1}'])
+    ax.set_axis_labels('#{rask.captures.plot0} #{rask.captures.plot1}', 'frequency')
     plt.savefig('#{rask.output}')
     PYTHON
   end
@@ -45,3 +47,7 @@ end
 task figures: (groups.product(%w[sepal petal], %w[length width]).map do |info|
   "_out/#{info[0]}/plot_#{info[1]}_#{info[2]}__iris.pdf"
 end)
+
+task :clean do
+  `rm -r _out/`
+end
