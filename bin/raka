@@ -17,8 +17,6 @@ def detect_main
   return rakas[0] if rakas.length == 1
 end
 
-entry = detect_main
-
 options = { rake: {}, raka_finished: false }
 def set_option(opts, key, value)
   if opts[:raka_finished]
@@ -34,8 +32,8 @@ parser = OptionParser.new do |opts|
     set_option(options, :verbose, v)
   end
 
-  opts.on('-F', '--[no-]force', 'Run even when up to date') do |f|
-    set_option(options, :force, f)
+  opts.on('-f', '--file FILE', String, 'Run even when up to date') do |s|
+    set_option(options, :file, s)
   end
 
   opts.on('-j', '--jobs JOBS', Integer, 'Run in parallel') do |n|
@@ -52,6 +50,8 @@ self_args = both_args[0].split(/\s+/)
 parser.parse!(self_args)
 extra_args = (both_args[1] || ' ').lstrip
 
+entry = options[:file] || detect_main
+
 env = if options[:verbose]
         'LOG_LEVEL=0 '
       else
@@ -59,10 +59,9 @@ env = if options[:verbose]
       end
 targets = self_args.join(' ')
 cmd = ''
-cmd += "rm -f #{targets}; " if options[:force]
 opt_str = "-f #{entry}"
 opt_str += " -m -j #{options[:jobs]}" if options.key?(:jobs)
-cmd += "#{env}rake #{opt_str} #{extra_args}#{targets}"
+cmd += "#{env}rake #{opt_str} #{extra_args} #{targets}"
 puts cmd
 output = []
 ro, out = IO.pipe
@@ -81,6 +80,4 @@ end
 re.each_line { |l| puts l; }
 
 Process.wait(pid)
-if output.empty? && $CHILD_STATUS.exitstatus == 0
-  puts 'All targets are up to date'
-end
+puts 'All targets are up to date' if output.empty? && $CHILD_STATUS.exitstatus == 0
