@@ -28,8 +28,7 @@ class DSLCompiler
   # Raka task structure, input task is rake's task pushed into blocks
   def dsl_task(token, task)
     name = task.name
-    deps = task.prerequisites
-
+    deps = task.prerequisites 
     output_info = token._parse_output_ name
     task_info = {
       name: name,
@@ -41,6 +40,10 @@ class DSLCompiler
     OpenStruct.new(output_info.to_h.merge(task_info))
   end
 
+  def stem(path)
+    File.basename(path, File.extname(path))
+  end
+
   # resolve auto variables with only output info,
   # useful when resolve extra deps (task is not available yet)
   def resolve_by_output(target, output_info)
@@ -50,7 +53,7 @@ class DSLCompiler
       .gsub('$(scope)', info.scope.nil? ? '' : info.scope)
       .gsub('$(target_scope)', info.target_scope.nil? ? '' : info.target_scope)
       .gsub('$(output)', info.output)
-      .gsub('$(output_stem)', info.stem)
+      .gsub('$(output_stem)', stem(info.stem))
       .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
       .gsub('$@', info.name)
 
@@ -75,7 +78,8 @@ class DSLCompiler
 
     protect_percent_symbol text do |safe_text|
       # add numbered auto variables like $0, $2 referring to the first and third deps
-      safe_text.gsub(/\$\(dep(\d+)\)/, '%{\1}') % array_to_hash(task.deps)
+      safe_text = safe_text.gsub(/\$\(dep(\d+)\)/, '%{\1}') % array_to_hash(task.deps)
+      safe_text.gsub(/\$\(dep(\d+)_stem\)/, '%{\1}') % array_to_hash(task.deps.map {|d| stem(d)})
     end
   end
 

@@ -68,4 +68,8 @@ class Raka
     block.call
     @scopes.pop
   end
+
+  def stem(path)
+    File.basename(path, File.extname(path))
+  end
 end

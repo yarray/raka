@@ -2,12 +2,12 @@ require '../lib/raka'
 
 dsl = Raka.new(self, output_types: [:txt])
 
-txt.test = run do |task|
-    `touch #{task.output}`
-end
-
 txt('topic').test = [txt.test] | run do |task|
     File.write(task.output, task.deps[0])
+end
+
+txt.test = run do |task|
+    `touch #{task.output}`
 end
 
 task :default, [:ctx] => ['_out/topic/test.txt'] do |t, args|

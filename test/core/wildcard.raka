@@ -1,10 +1,10 @@
 
 require '../lib/raka'
 
-Raka.new(self, output_types: [:txt])
+dsl = Raka.new(self, output_types: [:txt])
 
 txt._.geom = run do |task|
-    File.write(task.output, 'geom of ' + task.input_stem)
+    File.write(task.output, 'geom of ' + dsl.stem(task.input))
 end
 
 txt.test = run do |task|
