@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../lib/protocol'
+require_relative '../../lib/raka/protocol'
 
 # awk script protocol, the input is bound to the content of the auto input
 class Awk
