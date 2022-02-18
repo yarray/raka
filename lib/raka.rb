@@ -2,9 +2,9 @@
 
 require 'logger'
 
-require_relative './compile'
-require_relative './protocol'
-require_relative './token'
+require_relative './src/compile'
+require_relative './src/protocol'
+require_relative './src/token'
 
 # initialize raka
 class Raka
