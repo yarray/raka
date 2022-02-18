@@ -2,9 +2,9 @@
 
 require 'logger'
 
-require_relative './src/compile'
-require_relative './src/protocol'
-require_relative './src/token'
+require_relative './raka/compile'
+require_relative './raka/protocol'
+require_relative './raka/token'
 
 # initialize raka
 class Raka
@@ -54,7 +54,7 @@ class Raka
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
-    @options.lang.each { |path| load File::join(File::dirname(__FILE__), "#{path}/impl.rb") }
+    @options.lang.each { |path| load File::join(File::dirname(__FILE__), "raka/#{path}/impl.rb") }
     @options.user_lang.each { |path| load path.to_s + '.rb' }
 
     # These are where the dsl starts
