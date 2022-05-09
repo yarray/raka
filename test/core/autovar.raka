@@ -6,7 +6,7 @@ Raka.new(self, output_types: [:txt])
 
 txt.test.stat = [txt.test1] | [
   proc do |_env, task, &resolve|
-      template = '$(output_stem):$(input_stem):$@:$^:$<:$(output):$(deps):$(input):$(dep1)'
+      template = '$(output_stem):$(input_stem):$@:$^:$<:$(output):$(deps):$(input):$(dep1):$(func)'
       File.write(task.output, resolve.call(template, task))
   end
 ]
@@ -19,7 +19,7 @@ end
 
 task :default, [:ctx] => ['_out/stat__test.txt'] do |t, args|
     args.ctx.add_test do
-        assert_equal 'stat__test:test:_out/stat__test.txt:_out/test.txt,_out/test1.txt:_out/test.txt:_out/stat__test.txt:_out/test.txt,_out/test1.txt:_out/test.txt:_out/test1.txt',
+        assert_equal 'stat__test:test:_out/stat__test.txt:_out/test.txt,_out/test1.txt:_out/test.txt:_out/stat__test.txt:_out/test.txt,_out/test1.txt:_out/test.txt:_out/test1.txt:stat',
                      File.read(t.prerequisites[0])
     end
 end

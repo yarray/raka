@@ -1,0 +1,94 @@
+# frozen_string_literal: true
+
+require 'raka'
+require 'csv'
+
+dsl = Raka.new(
+  self, output_types: %i[table view csv],
+        lang: ['lang/psql', 'lang/shell', 'lang/python', 'lang/r']
+)
+
+csv.iris_all = shell* %(curl -L https://datahub.io/machine-learning/iris/r/iris.csv > $@)
+
+# host(ruby) protocol
+csv.rb_out = [csv.iris_all] | run do |rask|
+  in_f = File.open(rask.deps[0])
+  out_f = File.open(rask.output, 'w')
+  options = { headers: true, return_headers: true, write_headers: true }
+  CSV.filter(in_f, out_f, options) do |row|
+    row['class'] == 'Iris-versicolor'
+  end
+end
+
+# python protocol
+csv.py_out = [csv.iris_all] | py* %(
+  import pandas as pd
+  df = pd.read_csv('$(dep0)')
+  df[df['class'] == 'Iris-versicolor'].to_csv('$@')
+)
+
+# python protocol (block)
+csv.py_out2 = [csv.iris_all] | py do |rask|
+  <<-PYTHON
+  import pandas as pd
+  df = pd.read_csv('#{rask.deps[0]}')
+  df[df['class'] == 'Iris-versicolor'].to_csv('#{rask.output}')
+  PYTHON
+end
+
+# r protocol
+csv.r_out = [csv.iris_all] | r* %(
+  df <- read.csv("$(dep0)")
+  write.csv(df[(df$class == "Iris-versicolor"),], file="$@")
+)
+
+# r protocol (block)
+csv.r_out = [csv.iris_all] | r do |rask|
+  <<-R
+  df <- read.csv("#{rask.deps[0]}")
+  write.csv(df[(df$class == "Iris-versicolor"),], file="#{rask.output}")
+  R
+end
+
+# shell protocol
+csv.shell_out = [csv.iris_all] | shell* %(
+  cat <(head $(dep0)) <(grep "Iris-versicolor" $(dep0)) > $@
+)
+
+# shell protocol (block)
+csv.shell_out2 = [csv.iris_all] | shell do |rask|
+  "cat <(head -1 #{rask.deps[0]}) <(grep 'Iris-versicolor' #{rask.deps[0]}) > rask.output"
+end
+
+# psql protocol
+pg = OpenStruct.new(
+  user: 'postgres',
+  port: 5433,
+  host: '127.0.0.1',
+  db: 'postgres',
+  password: 'postgres'
+)
+psql.config conn: pg, create: :mview
+
+table.iris_all = [csv.iris_all] | psql(create: nil)* %(
+  DROP TABLE IF EXISTS $(output_stem);
+  CREATE TABLE $(output_stem) (
+    sepallength float,
+    sepalwidth float,
+    petallength float,
+    petalwidth float,
+    class varchar
+  );
+  \\COPY $(output_stem) FROM '$(dep0)' CSV HEADER;
+)
+
+table.psql_out = [table.iris_all] | psql* %(
+  SELECT * FROM $(dep0_stem) WHERE class='Iris-versicolor'
+)
+
+# psql protocol (block)
+table.psql_out2 = [table.iris_all] | psql do |rask|
+  <<-SQL
+  SELECT * FROM #{dsl.stem(rask.deps[0])} WHERE class='Iris-versicolor'
+  SQL
+end

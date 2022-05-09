@@ -55,6 +55,8 @@ class DSLCompiler
       .gsub('$(output)', info.output)
       .gsub('$(output_stem)', stem(info.stem))
       .gsub('$(input_stem)', info.input_stem.nil? ? '' : info.input_stem)
+      .gsub('$(func)', info.func.nil? ? '' : info.func)
+      .gsub('$(ext)', info.ext)
       .gsub('$@', info.name)
 
     protect_percent_symbol text do |safe_text|

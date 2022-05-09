@@ -111,7 +111,6 @@ end
 task figures: (groups.product(%w[sepal petal], %w[length width]).map do |info|
   "_out/#{info[0]}/plot_#{info[1]}_#{info[2]}__iris.pdf"
 end)
-
 ```
 
 In this example, we download a classical dataset named *iris.csv*, use python code to extract two varieties including *virginica* and *versicolor*, and generate thematic plots of frequency histograms for both varieties. 
@@ -262,7 +261,7 @@ The corresponding railroad diagrams are:
 
 **action**
 
-![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/protocol.svg)
+![](https://cdn.rawgit.com/yarray/raka/master/doc/syntax/action.svg)
 
 The definition is concise but several details are omitted for simplicity:
 
@@ -301,34 +300,140 @@ One can write special token `_` to match any token. Since raka uses prefix match
 
 In some places of `rexpr`, templates can be written instead of strings, so that it can represent different values at runtime. There are two types of variables that can be used in templates. The first is automatic variables, which is just like `$@` in Make or `task.name` in Rake. We even preserve some Make conventions for easier migrations. All automatic varibales begin with `$`. The possible automatic variables are:
 
-| symbol                                    | meaning                                                                                                |
+| symbol                                    | description                                                                                            |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | \$@, \$(output)                           | the output file                                                                                        |
-| \$<, \$(input)                            | the input file                                                                                         |
-| \$^, \$(deps)                             | all dependecies concated by comma (without input)                                                      |
-| \$(dep0), \$(dep1), ...                   | the i-th depdency                                                                                      |
+| \$<, \$(input)                            | the input file defined in the chained target                                                           |
+| \$^, \$(deps)                             | all dependecies concated by comma (including input)                                                    |
+| \$(dep0), \$(dep1), ...                   | the i-th depdency (input is $(dep0))                                                                   |
 | \$(input_stem)                            | stem of the input file                                                                                 |
 | \$(output_stem)                           | stem of the output file                                                                                |
+| \$(func)                                  | the token added to input to generate output, e.g., stat in csv.data.stat                               |
+| \$(ext)                                   | extension of the output file                                                                           |
 | \$(scope)                                 | scope for current task, i.e. the common directory for output, input and dependencies                   |
 | \$(target_scope)                          | the inline scope defined in target                                                                     |
 | \$(target_scope0), \$(target_scope1), ... | the i-th captured value by inline scope defined in target                                              |
 | \$(rule_scope0), \$(rule_scope1), ...     | the i-th scope defined in rule-level by nested calls of the dsl.scope function (i is larger insideout) |
 
-The other type of variables are those captured during pattern matching,which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
+The other type of variables are those captured during pattern matching, which can be referred to using `%{var}`. In the example of the [pattern matching](###pattern-matching) section, `%{indicator}` will be replaced by `node_num`, `%{top}` will be replaced by `top_50` and `%{top0}` will be replaced by `50`. In such case, a template as `'calculate top %{top0} of %{indicator} for $@'` will be resolved as `'calculate top 50 of node_num for top_50__node_num__buildings.pdf'`
 
 Templates can happen in various places. For depdencies and post targets, tokens with parenthesis can contain templates, like `csv._('%{indicator}')`. The symbol of a token with parenthesis is of no use and is generally omitted with an underscore. It is also possible to write template literal directly, i.e. `'%{indicator}.csv'`. Templates can also be applied in actions but it depends on the implementations of protocols.
 
 ### Actions and protocols
 
-Currently Raka support 4 lang: shell, psql, r and psqlf.
+Raka invokes **actions** when all input and dependencies are presented. Generally, users define an action that generates the output. To maximize the flexibility, users can feed code in an arbitrary programming language to the corresponding **protocol**. The protocol will then transform and execute the code. Raka natively supports the host(ruby) protocol and several foreign protocols including shell, python, psql, and r.
+
+The host protocol is special and just executes the given ruby block. All other protocols can accept a templated code string given an aterisk operator or a block producing a templated code string. Following illustrates examples for each protocol.
+
+In the host protocol and the block versions of other protocols, a raka task (the *rask* variable) is provided, which offers the following properties:
+
+| property              | description                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| output                | the output file                                                                      |
+| input                 | the input file defined in the chained target                                         |
+| deps                  | the depdencies (input is deps[0])                                                    |
+| func                  | the token added to input to generate output, e.g., stat in csv.data.stat             |
+| ext                   | extension of the output file                                                         |
+| captures              | captured text during pattern matching, key-value                                     |
+| scope                 | scope for current task, i.e. the common directory for output, input and dependencies |
+| target_scope          | the inline scope defined in target                                                   |
+| target_scope_captures | captured values by inline scope defined in target                                    |
+| rule_scopes           | the inline scope defined in target                                                   |
 
 ```ruby
-shell(base_dir='./')* code::templ_str { |task| ... }
-psql(options={})* code::templ_str { |task| ... }
-r(src:str, libs=[])* code::templ_str { |task| ... }
+require 'raka'
+require 'csv'
 
-# options = { script_name: , script_file: , params: }
-psqlf(options={})
+dsl = Raka.new(
+  self, output_types: %i[table view csv],
+        lang: ['lang/psql', 'lang/shell', 'lang/python', 'lang/r']
+)
+
+csv.iris_all = shell* %(curl -L https://datahub.io/machine-learning/iris/r/iris.csv > $@)
+
+# host(ruby) protocol
+csv.rb_out = [csv.iris_all] | run do |rask|
+  in_f = File.open(rask.deps[0])
+  out_f = File.open(rask.output, 'w')
+  options = { headers: true, return_headers: true, write_headers: true }
+  CSV.filter(in_f, out_f, options) do |row|
+    row['class'] == 'Iris-versicolor'
+  end
+end
+
+# python protocol
+csv.py_out = [csv.iris_all] | py* %(
+  import pandas as pd
+  df = pd.read_csv('$(dep0)')
+  df[df['class'] == 'Iris-versicolor'].to_csv('$@')
+)
+
+# python protocol (block)
+csv.py_out2 = [csv.iris_all] | py do |rask|
+  <<-PYTHON
+  import pandas as pd
+  df = pd.read_csv('#{rask.deps[0]}')
+  df[df['class'] == 'Iris-versicolor'].to_csv('#{rask.output}')
+  PYTHON
+end
+
+# r protocol
+csv.r_out = [csv.iris_all] | r* %(
+  df <- read.csv("$(dep0)")
+  write.csv(df[(df$class == "Iris-versicolor"),], file="$@")
+)
+
+# r protocol (block)
+csv.r_out = [csv.iris_all] | r do |rask|
+  <<-R
+  df <- read.csv("#{rask.deps[0]}")
+  write.csv(df[(df$class == "Iris-versicolor"),], file="#{rask.output}")
+  R
+end
+
+# shell protocol
+csv.shell_out = [csv.iris_all] | shell* %(
+  cat <(head $(dep0)) <(grep "Iris-versicolor" $(dep0)) > $@
+)
+
+# shell protocol (block)
+csv.shell_out2 = [csv.iris_all] | shell do |rask|
+  "cat <(head -1 #{rask.deps[0]}) <(grep 'Iris-versicolor' #{rask.deps[0]}) > rask.output"
+end
+
+# psql protocol
+pg = OpenStruct.new(
+  user: 'postgres',
+  port: 5433,
+  host: '127.0.0.1',
+  db: 'postgres',
+  password: 'postgres'
+)
+psql.config conn: pg, create: :mview
+
+table.iris_all = [csv.iris_all] | psql(create: nil)* %(
+  DROP TABLE IF EXISTS $(output_stem);
+  CREATE TABLE $(output_stem) (
+    sepallength float,
+    sepalwidth float,
+    petallength float,
+    petalwidth float,
+    class varchar
+  );
+  \\COPY $(output_stem) FROM '$(dep0)' CSV HEADER;
+)
+
+table.psql_out = [table.iris_all] | psql* %(
+  SELECT * FROM $(dep0_stem) WHERE class='Iris-versicolor'
+)
+
+# psql protocol (block)
+table.psql_out2 = [table.iris_all] | psql do |rask|
+  <<-SQL
+  SELECT * FROM #{dsl.stem(rask.deps[0])} WHERE class='Iris-versicolor'
+  SQL
+end
+
 ```
 
 ### Initialization and options
@@ -345,7 +450,7 @@ The argument `<env>` should be the *self* of a running Rakefile. In most case yo
 dsl = DSL.new(self, <options>)
 ```
 
-The argument `options` currently support `output_types` and `input_types`. For each item in `output_types`, you will get an extra function to bootstrap a rule. For example, with
+Two important fields of `options` are `output_types` and `input_types`. For each item in `output_types`, you will get a global function to bootstrap a rule. For example, with
 
 ```ruby
 dsl = DSL.new(self, { output_types: [:csv, :pdf] })
@@ -358,11 +463,19 @@ csv.data = ...
 pdf.graph = ...
 ```
 
-which will generate data.csv and graph.pdf
+which will match *<dir>/data.csv* and *<dir>/graph.pdf*
 
-The `input_types` involves the strategy to find inputs. For example, raka will try to find both *numbers.csv* and *numbers.table* for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
+The `input_types` involves the strategy to find inputs. All possible input types will be tried when resolving an input file in chained target.  For example, raka will try to find both *numbers.csv* and *numbers.table* for a rule like `table.numbers.mean = …` if `input_type = [:csv, :table]`.
 
 ### Scope
+
+Scopes define constraints which help users create rules more precisely. A scope generally refer to a folder and can happen in several places.
+
+**Task scope** is the scope when executing a task, a.k.a. **scope**.  When a rule is matched given a desired output, a task is generated and its scope is the common folder of the output and all dependencies. For example, a rule `csv.out = [csv.in] | ...` can be matched given *out/out.csv* and the task scope is resolved *out/*. The task will thus search for *out/in.csv* as dependency. 
+
+**Rule scope** is the scope to restrict possible task scope, given by `Raka::scope`. In the following example, the rule scopes are 
+
+**Target scope.**
 
 ## Rakefile Template
 
