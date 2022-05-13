@@ -41,7 +41,7 @@ class Raka
   def initialize(env, options)
     @env = env
     defaults = {
-      output_types: [:csv], input_types: [],
+      output_types: [:csv], input_types: nil,
       type_aliases: {},
       scopes: [],
       lang: ['lang/shell'],
@@ -51,8 +51,10 @@ class Raka
 
     create_logger options.log_level || (ENV['LOG_LEVEL'] || Logger::INFO).to_i
 
-    # TODO: allow out-only types
-    @options.input_types |= @options.output_types # any output can be used as intermediate
+    # if input_types given, obey it, otherwise use all output types as possible input types
+    unless @options.input_types
+      @options.input_types = @options.output_types # any output can be used as intermediate
+    end
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
     @options.lang.each { |path| load File::join(File::dirname(__FILE__), "raka/#{path}/impl.rb") }
