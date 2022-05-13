@@ -29,11 +29,17 @@ end
 class Token
   attr_reader :chain
 
-  def initialize(compiler, context, chain, inline_scope)
+  def initialize(compiler, context, chain, inline_scope, input_exts: nil)
     @compiler = compiler
     @context = context
     @chain = chain
     @inline_scope = inline_scope
+    @options = {}
+    @options[:input_exts] = input_exts
+  end
+
+  def _options_
+    @options
   end
 
   def _captures_(target)
@@ -74,7 +80,7 @@ class Token
 
   # attach a new item to the chain
   def _attach_(item)
-    Token.new(@compiler, @context, @chain + [item], @inline_scope)
+    Token.new(@compiler, @context, @chain + [item], @inline_scope, @options)
   end
 
   # rubocop:disable Style/MissingRespondToMissing  # for DSL not essential

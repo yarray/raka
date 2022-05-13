@@ -1,0 +1,24 @@
+require '../lib/raka'
+
+Raka.new(self, output_types: %i[txt md])
+
+txt(input_exts: [:txt]).test.stat_txt = run do |task|
+    File.write(task.output, 'Hello ' + task.deps[0])
+end
+
+txt(input_exts: [:md]).test.stat_md = run do |task|
+    File.write(task.output, 'Hello ' + task.deps[0])
+end
+
+txt.test = run do |task|
+end
+
+md.test = run do |task|
+end
+
+task :default, [:ctx] => ['_out/stat_txt__test.txt', '_out/stat_md__test.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'Hello _out/test.txt', File.read(t.prerequisites[0])
+        assert_equal 'Hello _out/test.md', File.read(t.prerequisites[1])
+    end
+end

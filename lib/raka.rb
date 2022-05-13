@@ -25,7 +25,7 @@ class Raka
     env = @env
     options = @options
     scopes = @scopes
-    @env.define_singleton_method(ext_alias || ext) do |*args|
+    @env.define_singleton_method(ext_alias || ext) do |*args, **kw|
       # Here the compiler are bound with @options so that when we change @options
       # using methods like scope in Rakefile, the subsequent rules defined will honor
       # the new settings
@@ -33,7 +33,7 @@ class Raka
       inline_scope_pattern = !args.empty? ? args[0] : nil
       Token.new(
         DSLCompiler.new(env, options), Context.new(ext, scopes.clone),
-        [], inline_scope_pattern
+        [], inline_scope_pattern, **kw
       )
     end
   end
@@ -51,6 +51,7 @@ class Raka
 
     create_logger options.log_level || (ENV['LOG_LEVEL'] || Logger::INFO).to_i
 
+    # TODO: allow out-only types
     @options.input_types |= @options.output_types # any output can be used as intermediate
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]

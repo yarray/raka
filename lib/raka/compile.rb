@@ -131,6 +131,7 @@ class DSLCompiler
 
   # compile token = rhs to rake rule
   # rubocop:disable Style/MethodLength
+  # rubocop:disable Style/PerceivedComplexity
   def compile(lhs, rhs)
     unless @env.instance_of?(Object)
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
@@ -170,10 +171,12 @@ class DSLCompiler
     end
 
     # We generate a rule for each possible input type
-    @options.input_types.each do |ext|
+
+    (lhs._options_[:input_exts] || @options.input_types).each do |ext|
       # We find auto source from both THE scope and the root
       create_rule lhs, ext, actions, extra_deps, extra_tasks
     end
   end
 end
 # rubocop:enable Style/MethodLength
+# rubocop:enable Style/PerceivedComplexity
