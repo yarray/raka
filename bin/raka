@@ -62,7 +62,7 @@ cmd = ''
 opt_str = "-f #{entry}"
 opt_str += " -m -j #{options[:jobs]}" if options.key?(:jobs)
 cmd += "#{env}rake #{opt_str} #{extra_args} #{targets}"
-dry_cmd = cmd + ' --dry-run'
+dry_cmd = 'RUBYOPT="-W0" ' + cmd + ' --dry-run'
 _, dry_msg, status = Open3.capture3(dry_cmd)
 exit(status) if status != 0
 unless (dry_msg.lines.first.chomp =~ /^.*\(.*not_needed.*\)$/).nil?
