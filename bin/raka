@@ -62,22 +62,18 @@ cmd = ''
 opt_str = "-f #{entry}"
 opt_str += " -m -j #{options[:jobs]}" if options.key?(:jobs)
 cmd += "#{env}rake #{opt_str} #{extra_args} #{targets}"
+dry_cmd = cmd + ' --dry-run'
+_, dry_msg, status = Open3.capture3(dry_cmd)
+exit(status) if status != 0
+unless (dry_msg.lines.first.chomp =~ /^.*\(.*not_needed.*\)$/).nil?
+  puts 'All targets are up to date'
+  exit(0)
+end
 puts cmd
-output = []
-ro, out = IO.pipe
-re, err = IO.pipe
 pid = fork do
-  status = system(cmd, out: out, err: err)
+  status = system(cmd)
   puts 'Error: rake returns the following information:' unless status
   exit($CHILD_STATUS.exitstatus)
 end
-out.close
-err.close
-ro.each_line do |l|
-  puts l
-  output << l.chomp
-end
-re.each_line { |l| puts l; }
 
 Process.wait(pid)
-puts 'All targets are up to date' if output.empty? && $CHILD_STATUS.exitstatus == 0
