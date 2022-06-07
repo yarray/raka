@@ -86,11 +86,23 @@ end
 # helper functions to implement LanguageImpl
 def run_cmd(env, cmd)
   env.logger.debug(cmd)
-  Open3.popen3(cmd) do |_stdin, stdout, stderr, _thread|
-    env.logger.debug(stdout.read)
-    err = stderr.read
-    env.logger.info(err) unless err.empty?
+  out_r, out_w = IO.pipe
+  err_r, err_w = IO.pipe
+  if env.logger.level <= 0
+    pid = spawn(cmd, out: out_w)
+    Thread.new do
+      env.logger.debug(out_r.gets) until out_r.eof
+    end
+  elsif env.logger.level == 1
+    pid = spawn(cmd, out: out_w)
+  else
+    pid = spawn(cmd, out: out_w, err: err_w)
   end
+
+  Process.wait pid
+  out_w.close
+  err_w.close
+  err_r.close
 end
 
 def pick_kwargs(klass, kwargs)
