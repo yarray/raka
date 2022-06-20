@@ -80,7 +80,7 @@ class Token
 
   # attach a new item to the chain
   def _attach_(item)
-    Token.new(@compiler, @context, @chain + [item], @inline_scope, @options)
+    Token.new(@compiler, @context, @chain + [item], @inline_scope, **@options)
   end
 
   # rubocop:disable Style/MissingRespondToMissing  # for DSL not essential
