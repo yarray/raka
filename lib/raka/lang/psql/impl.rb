@@ -49,7 +49,7 @@ class Psql
     param_str = (@params || {}).map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
 
     bash env, %(
-    #{sh_cmd(task.scope)} #{param_str} -v _name_=#{task.stem} \
+    #{sh_cmd(task.rule_scopes.join('__'))} #{param_str} -v _name_=#{task.output_stem} \
       -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     )

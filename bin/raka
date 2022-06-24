@@ -63,8 +63,12 @@ opt_str = "-f #{entry}"
 opt_str += " -m -j #{options[:jobs]}" if options.key?(:jobs)
 cmd += "#{env}rake #{opt_str} #{extra_args} #{targets}"
 dry_cmd = 'RUBYOPT="-W0" ' + cmd + ' --dry-run'
-_, dry_msg, status = Open3.capture3(dry_cmd)
-exit(status) if status != 0
+dry_out, dry_msg, status = Open3.capture3(dry_cmd)
+if status != 0
+  puts dry_out
+  puts dry_msg
+  exit(status.exitstatus)
+end
 unless (dry_msg.lines.first.chomp =~ /^.*\(.*not_needed.*\)$/).nil?
   puts 'All targets are up to date'
   exit(0)
