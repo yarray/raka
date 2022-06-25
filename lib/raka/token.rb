@@ -58,7 +58,7 @@ class Token
     res = Hash[info.names.zip(info.captures)]
     unless info[:scope].nil?
       rule_scopes = Regexp.new(_scope_pattern_).match(info[:scope]).captures
-      res[:rule_scopes] = rule_scopes[1..-1].reverse
+      res[:rule_scopes] = rule_scopes[2..-1].reverse
     end
     if !@inline_scope.nil? && !info[:target_scope].nil?
       segs = Regexp.new(@inline_scope).match(info[:target_scope]).captures
@@ -130,8 +130,12 @@ class Token
     [auto_input]
   end
 
+  def _rule_scope_pattern_
+    (@context.scopes.map { |layer| "(#{layer.join('|')})" }).join('/') + ')'
+  end
+
   def _scope_pattern_
-    '((?:(\S+)/)?' + (@context.scopes.map { |layer| "(#{layer.join('|')})" }).join('/') + ')'
+    '((?:(\S+)/)?' + _rule_scope_pattern_
   end
 
   def _pattern_

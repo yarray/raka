@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1596 714" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-220,-143)">
+        <g transform="matrix(0.337267,0,0,0.25,154.027,64.9606)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(179,179,179);"/>
+        </g>
+        <g transform="matrix(0.285714,0,0,0.25,322.264,63.6614)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,26);"/>
+        </g>
+        <g transform="matrix(0.502167,0,0,0.25,365.272,64.9606)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,26);"/>
+        </g>
+        <g transform="matrix(1.5,0,0,0.25,-312.898,108.394)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(26,160,164);"/>
+        </g>
+        <g transform="matrix(2.64754,0,0,0.25,-773.719,150.827)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(26,59,164);"/>
+        </g>
+        <g transform="matrix(1.22561,0,0,0.25,267.536,64.9606)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,161);"/>
+        </g>
+        <g transform="matrix(0.337267,0,0,0.25,154.6,408.78)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(179,179,179);"/>
+        </g>
+        <g transform="matrix(0.285714,0,0,0.25,321.993,407.48)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,26);"/>
+        </g>
+        <g transform="matrix(0.5,0,0,0.25,366.142,407.48)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,26);"/>
+        </g>
+        <g transform="matrix(1.5,0,0,0.25,-312.169,452.213)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(26,160,164);"/>
+        </g>
+        <g transform="matrix(1.94373,0,0,0.25,-490.359,487.646)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(26,59,164);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.8661,-803.15)">
+            <text x="354.331px" y="1010.72px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:66.667px;">out/de/food/percent_50/cheap__data.csv</text>
+        </g>
+        <g transform="matrix(1,0,0,1,537.496,-587.772)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(26,59,164);">output scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-88.4882,-587.772)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(164,26,26);">rule scopes</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-117.035,-531.451)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(179,179,179);">unbound scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,776.035,-540.528)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(164,26,161);">target scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,489.803,-683.805)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(26,160,164);">task scope(scope)</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.1378,-449.072)">
+            <text x="354.331px" y="1010.72px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:66.667px;">out/de/food/base/price.csv</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.8661,-803.15)">
+            <path d="M354.331,1062.99L307.087,1062.99L307.087,1228.35" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.8661,-803.15)">
+            <path d="M566.929,1074.8L566.929,1081L744.094,1081L744.094,1074.8" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+            <path d="M566.929,1081L336,1081L336,1181.1" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.8661,-803.15)">
+            <path d="M1229.89,1062.99L1370.08,1062.99L1370.08,1228.35" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(0.524,0,0,0.25,549.283,407.227)">
+            <rect x="401.575" y="732.283" width="330.709" height="94.488" style="fill:rgb(164,26,161);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,613,-187.564)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(164,26,161);">dep1 target scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-76.6772,-459.263)">
+            <path d="M1009.68,1062.99L1370.08,1062.99L1370.08,1228.35" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-64.8661,-795.15)">
+            <path d="M850.394,1098.42L897.638,1098.42" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(0.984583,0,0,1,-51.0276,-452.63)">
+            <path d="M850.394,1098.42L897.638,1098.42" style="fill:none;stroke:black;stroke-width:4.2px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-194.008,-788.15)">
+            <path d="M1263,1145.67L1263,1167" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,407.575,-242.252)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(26,59,164);">dep1 scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-89.563,-242.518)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(164,26,26);">rule bounded scopes</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-118.11,-186.197)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(179,179,179);">unbound scope</text>
+        </g>
+        <g transform="matrix(1,0,0,1,488.728,-338.551)">
+            <text x="354.331px" y="994.891px" style="font-family:'CourierNewPS-BoldMT', 'Courier New', monospace;font-weight:700;font-size:41.667px;fill:rgb(26,160,164);">task scope(scope)</text>
+        </g>
+        <g transform="matrix(1,0,0,1,-65.9409,-457.896)">
+            <path d="M354.331,1062.99L307.087,1062.99L307.087,1228.35" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1,-65.9409,-459.896)">
+            <path d="M566.929,1074.8L566.929,1081L744.094,1081L744.094,1074.8" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+            <path d="M566.929,1081L336,1081L336,1181.1" style="fill:none;stroke:black;stroke-width:4.17px;"/>
+        </g>
+        <g transform="matrix(1,0,0,1.23079,-485.866,-714.308)">
+            <path d="M1263,1145.67L1263,1161.98" style="fill:none;stroke:black;stroke-width:3.72px;"/>
+        </g>
+    </g>
+</svg>

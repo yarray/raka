@@ -7,13 +7,13 @@ dsl = Raka.new(self, output_types: [:txt])
 dsl.scope :class1 do
     dsl.scope 'subclass1/aspect1' do
         txt.test = run do |task|
-            File.write(task.output, "#{task.scope},#{task.rule_scopes[0]},#{task.rule_scopes[1]}")
+            File.write(task.output, "#{task.scope},#{task.rule_scopes[0]},#{task.rule_scopes[1]},#{task.rule_scopes.length}")
         end
     end
 end
 
 task :default, [:ctx] => ['_out/class1/subclass1/aspect1/test.txt'] do |t, args|
     args.ctx.add_test do
-        assert_equal '_out/class1/subclass1/aspect1,subclass1/aspect1,class1', File.read(t.prerequisites[0])
+        assert_equal '_out/class1/subclass1/aspect1,subclass1/aspect1,class1,2', File.read(t.prerequisites[0])
     end
 end

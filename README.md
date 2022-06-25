@@ -338,7 +338,7 @@ In the host protocol and the block versions of other protocols, a raka task (the
 | scope                 | scope for current task, i.e. the common directory for output, input and dependencies |
 | target_scope          | the inline scope defined in target                                                   |
 | target_scope_captures | captured values by inline scope defined in target                                    |
-| rule_scopes           | the inline scope defined in target                                                   |
+| rule_scopes           | the scope components bounded by the rule scopes                                                   |
 
 ```ruby
 require 'raka'
@@ -469,13 +469,61 @@ The `input_types` involves the strategy to find inputs. All possible input types
 
 ### Scope
 
-Scopes define constraints which help users create rules more precisely. A scope generally refer to a folder and can happen in several places.
+Scopes represent the context of a running task and its components, which are generally folders physically. Users can define scope constraints with rules to help users create rules more precisely. and can happen in several places.
 
-**Task scope** is the scope when executing a task, a.k.a. **scope**.  When a rule is matched given a desired output, a task is generated and its scope is the common folder of the output and all dependencies. For example, a rule `csv.out = [csv.in] | ...` can be matched given *out/out.csv* and the task scope is resolved *out/*. The task will thus search for *out/in.csv* as dependency. 
+Scope constraints:
 
-**Rule scope** is the scope to restrict possible task scope, given by `Raka::scope`. In the following example, the rule scopes are 
+**Rule scope** is the scope to restrict possible task scope. Rule scopes can be layered, each layer with several options, like:
 
-**Target scope.**
+```ruby
+dsl.scope :de, :fr
+  dsl.scope :food, :med 
+    ...rules
+  end
+end
+```
+
+**Target scope** is the scope to restrict a single target. It can be used in the left-hand part of a rule, or as dependencies in the right-hand. For example:
+
+```ruby
+# The constraint "de" only apply to food.csv and fruit__food.csv, not classifier.csv
+csv('de').food.fruit = [csv.classifier] | action
+```
+
+When resolved, scope constraints are verified and scopes are extracted and parsed, including the following concepts:
+
+**Scope**(**Task scope**) is the common scope of the task, every target is resolved under the scope.
+
+**Rule bounded scopes** (abbr. rule scopes) are the parts of scope bounded by the **Rule scope** constraints.
+
+**Target bounded scope** (abbr. target scope) is the part of scope bounded by the **Target scope** constraints.
+
+**Output scope** is the scope of output, while **Dep scope** is the scope of dependencies.
+
+The following example illustrates the relationships of the above concepts.
+
+Rule definition:
+
+```ruby
+dsl.scope :de, :fr, 
+  dsl.scope :food, :med
+    csv('percent_(\d+)').data.cheap = [csv('base').price] | ...
+  end
+end
+```
+
+When running `raka out/de/food/percent_50/cheap__data.csv`, the extracted scopes are as follows:
+
+![](https://cdn.rawgit.com/yarray/raka/master/doc/scope.svg)
+
+The auto variables are:
+
+|var|value|var|value|
+|---|-----|---|-----|
+|$(scope)|out/de/food|$(output_scope)|out/de/food/percent_50|
+|$(rule_scope0)|food|$(rule_scope1)|de|
+|$(target_scope)|percent_50|$(target_scope0)|50|
+|$(dep1_scope)|out/de/food/base|||
 
 ## Rakefile Template
 
@@ -483,4 +531,4 @@ Scopes define constraints which help users create rules more precisely. A scope 
 
 ## Compare to other tools
 
-Raka borrows some ideas from Drake but not much (currently mainly the name "protocol"). Briefly we have different visions and maybe different suitable senarios.
+Raka borrows some ideas from Drake but not much (currently mainly the name "protocol"). Briefly, we have different visions and maybe different suitable scenarios.

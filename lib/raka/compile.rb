@@ -34,6 +34,7 @@ class DSLCompiler
       name: name,
       deps: deps,
       deps_str: deps.join(','),
+      dep_scopes: deps.map { |d| File.dirname(d) },
       input: deps.first || '',
       task: task
     }
