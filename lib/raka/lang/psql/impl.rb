@@ -19,7 +19,7 @@ class Psql
   # Sometimes we want to use the psql command with bash directly
   def sh_cmd(scope)
     c = @conn
-    env_vars = "PGOPTIONS='-c search_path=#{scope ? scope + ',' : ''}public' "
+    env_vars = "PGOPTIONS='-c search_path=#{scope.empty? ? '' : scope + ','}public' "
     "PGPASSWORD=#{c.password} #{env_vars} psql -h #{c.host} -p #{c.port} -U #{c.user} -d #{c.db} -v ON_ERROR_STOP=1"
   end
 
