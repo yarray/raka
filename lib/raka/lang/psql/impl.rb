@@ -17,9 +17,9 @@ end
 # postgresql protocol using psql, requires HOST, PORT, USER, DB
 class Psql
   # Sometimes we want to use the psql command with bash directly
-  def sh_cmd(scope)
+  def sh_cmd(schema)
     c = @conn
-    env_vars = "PGOPTIONS='-c search_path=#{scope.empty? ? '' : scope + ','}public' "
+    env_vars = "PGOPTIONS='-c search_path=#{schema.empty? ? '' : schema + ','}public' "
     "PGPASSWORD=#{c.password} #{env_vars} psql -h #{c.host} -p #{c.port} -U #{c.user} -d #{c.db} -v ON_ERROR_STOP=1"
   end
 
@@ -35,10 +35,10 @@ class Psql
     raise 'argument conn required' if @conn.nil?
 
     if @create.to_s == 'table'
-      'DROP TABLE IF EXISTS :_name_;' \
+      'DROP TABLE IF EXISTS :_schema_.:_name_;' \
         'CREATE TABLE :_name_ AS (' + code + ');'
     elsif @create.to_s == 'mview'
-      'DROP MATERIALIZED VIEW IF EXISTS :_name_;' \
+      'DROP MATERIALIZED VIEW IF EXISTS :_schema_.:_name_;' \
         'CREATE MATERIALIZED VIEW :_name_ AS (' + code + ');'
     else
       code
@@ -47,10 +47,11 @@ class Psql
 
   def run_script(env, fname, task)
     param_str = (@params || {}).map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
+    schema = task.rule_scopes.join('__')
 
     bash env, %(
-    #{sh_cmd(task.rule_scopes.join('__'))} #{param_str} -v _name_=#{task.output_stem} \
-      -f #{fname} | tee #{fname}.log
+    #{sh_cmd(schema)} #{param_str} -v _name_=#{task.output_stem} \
+      -v _schema_=#{schema} -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     )
   end
