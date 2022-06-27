@@ -35,10 +35,10 @@ class Psql
     raise 'argument conn required' if @conn.nil?
 
     if @create.to_s == 'table'
-      'DROP TABLE IF EXISTS :_schema_.:_name_;' \
+      'DROP TABLE IF EXISTS :_schema_:_name_;' \
         'CREATE TABLE :_name_ AS (' + code + ');'
     elsif @create.to_s == 'mview'
-      'DROP MATERIALIZED VIEW IF EXISTS :_schema_.:_name_;' \
+      'DROP MATERIALIZED VIEW IF EXISTS :_schema_:_name_;' \
         'CREATE MATERIALIZED VIEW :_name_ AS (' + code + ');'
     else
       code
@@ -51,7 +51,7 @@ class Psql
 
     bash env, %(
     #{sh_cmd(schema)} #{param_str} -v _name_=#{task.output_stem} \
-      -v _schema_=#{schema} -f #{fname} | tee #{fname}.log
+      -v _schema_=#{schema.empty? ? '' : schema + '.'} -f #{fname} | tee #{fname}.log
     mv #{fname}.log #{task.name}
     )
   end
