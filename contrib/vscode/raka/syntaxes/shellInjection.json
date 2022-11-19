@@ -3,30 +3,6 @@
   "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "shell(\\(.*\\))?(\\*) (%\\()",
-      "end": "\\)",
-      "name": "meta.embedded.block",
-      "beginCaptures": {
-        "2": {
-          "name": "keyword.operator.arithmetic.ruby"
-        },
-        "3": {
-          "name": "punctuation.definition.string.begin.ruby"
-        }
-      },
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.string.end.ruby"
-        }
-      },
-      "contentName": "meta.embedded.shell",
-      "patterns": [
-        {
-          "include": "source.shell"
-        }
-      ]
-    },
-    {
       "begin": "shell(\\(.*\\))?(\\*) (\")",
       "end": "\"",
       "name": "meta.embedded.block",

@@ -3,30 +3,6 @@
   "injectionSelector": "L:source.ruby",
   "patterns": [
     {
-      "begin": "psql(\\(.*\\))?(\\*) (%\\()",
-      "end": "\\)",
-      "name": "meta.embedded.block",
-      "beginCaptures": {
-        "2": {
-          "name": "keyword.operator.arithmetic.ruby"
-        },
-        "3": {
-          "name": "punctuation.definition.string.begin.ruby"
-        }
-      },
-      "endCaptures": {
-        "0": {
-          "name": "punctuation.definition.string.end.ruby"
-        }
-      },
-      "contentName": "meta.embedded.sql",
-      "patterns": [
-        {
-          "include": "source.sql"
-        }
-      ]
-    },
-    {
       "begin": "psql(\\(.*\\))?(\\*) (\")",
       "end": "\"",
       "name": "meta.embedded.block",
