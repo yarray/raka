@@ -4,7 +4,7 @@
   "description": "Language Support for Raka (Rake for Data)",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.43.0"
+    "vscode": "^1.63.2"
   },
   "categories": [
     "Programming Languages"
