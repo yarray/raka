@@ -68,8 +68,23 @@ end
 \`\`\`
 and output "out/group0/sub1/test.csv", the rule scopes are [:sub1, :group0]
 `;
-const extDoc = "Extension of the output file";
+const extDoc = 'Extension of the output file';
 function activate(context) {
+    const embedLangProvider = vscode.languages.registerCompletionItemProvider('ruby', {
+        provideCompletionItems(document, position) {
+            const linePrefix = document
+                .lineAt(position)
+                .text.slice(0, position.character);
+            if (linePrefix.endsWith('<<~') || linePrefix.endsWith('<<-')) {
+                return ['SHELL', 'PYTHON', 'SQL'].map((m) => {
+                    const item = new vscode.CompletionItem(m, vscode.CompletionItemKind.Variable);
+                    item.insertText = new vscode.SnippetString(m + '\n  $1\n' + m);
+                    item.documentation = `Embed ${m} Language`;
+                    return item;
+                });
+            }
+        },
+    }, '-', '~');
     const raskProvider = vscode.languages.registerCompletionItemProvider('ruby', {
         provideCompletionItems(document, position) {
             // get all text until the `position` and check if it reads `console.`
@@ -117,7 +132,10 @@ function activate(context) {
             }
             const vars = [
                 ['@', '$@: the output file'],
-                ['^', '$^: the dependencies, concated by ",", not including input'],
+                [
+                    '^',
+                    '$^: the dependencies, concated by ",", not including input',
+                ],
                 ['<', '$@: the input file'],
             ];
             const parenVars = [
@@ -125,23 +143,24 @@ function activate(context) {
                 ['input', inputDoc],
                 ['output_stem', outputStemDoc],
                 ['input_stem', inputStemDoc],
-                ['deps', 'The dependencies, concated by ",", not including input'],
-                ['dep0', 'The i-th dependency, not including input'],
+                [
+                    'deps',
+                    'The dependencies, concated by ",", including input',
+                ],
+                ['dep0', 'The i-th dependency, including input'],
                 [
                     'scope',
                     'The scope of the task, i.e. the common directory for both output and dependencies',
                 ],
-                [
-                    'target_scope',
-                    targetScopeDoc,
-                ],
+                ['target_scope', targetScopeDoc],
                 [
                     'target_scope0',
                     'The i-th capture of the scope pattern specified by the rule target',
                 ],
                 [
                     'rule_scope0',
-                    'The i-th rule scope, specify by nested dsl.scopes\n\n' + ruleScopesDoc,
+                    'The i-th rule scope, specify by nested dsl.scopes\n\n' +
+                        ruleScopesDoc,
                 ],
             ];
             return vars
@@ -160,6 +179,7 @@ function activate(context) {
     }, '$');
     context.subscriptions.push(raskProvider);
     context.subscriptions.push(autoVarProvider);
+    context.subscriptions.push(embedLangProvider);
 }
 exports.activate = activate;
 //# sourceMappingURL=extension.js.map

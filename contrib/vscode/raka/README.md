@@ -1,4 +1,3 @@
-# raka README
+# Extension for Raka
 
-This is the README for your extension "raka". After writing up a brief description, we recommend including the following sections.
-
+Provide basic syntax highlighting for variables and embedded languages.

@@ -34,7 +34,7 @@
         }
       },
       "contentName": "meta.embedded.shell",
-      "end": "\\s*\\2$\\n?",
+      "end": "\\s*\\2",
       "endCaptures": {
         "0": {
           "name": "punctuation.definition.string.end.ruby"
