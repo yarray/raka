@@ -24,9 +24,10 @@ class Psql
   end
 
   # 1. do not add required argument here, so psql.config will work or we can only use psql(conn: xxx).config
-  def initialize(conn: nil, create: 'mview', params: {})
+  def initialize(conn: nil, create: 'mview', schema: '', params: {})
     @create = create
     @params = params
+    @schema = schema
     @conn = conn
   end
 
@@ -47,7 +48,7 @@ class Psql
 
   def run_script(env, fname, task)
     param_str = (@params || {}).map { |k, v| "-v #{k}=\"#{v}\"" }.join(' ')
-    schema = task.rule_scopes.join('__')
+    schema = @schema.empty? ? task.rule_scopes.join('__') : @schema
 
     bash env, %(
     #{sh_cmd(schema)} #{param_str} -v _name_=#{task.output_stem} \
