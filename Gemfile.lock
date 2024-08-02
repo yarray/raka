@@ -84,8 +84,8 @@ GEM
       kwalify (~> 0.7.0)
       parser (~> 3.1.0)
       rainbow (>= 2.0, < 4.0)
-    rexml (3.2.8)
-      strscan (>= 3.0.9)
+    rexml (3.3.3)
+      strscan
     rubocop (0.80.1)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)
