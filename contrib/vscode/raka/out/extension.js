@@ -145,9 +145,9 @@ function activate(context) {
                 ['input_stem', inputStemDoc],
                 [
                     'deps',
-                    'The dependencies, concated by ",", including input',
+                    'The dependencies, concated by ",", not including input',
                 ],
-                ['dep0', 'The i-th dependency, including input'],
+                ['dep0', 'The i-th dependency, not including input'],
                 [
                     'scope',
                     'The scope of the task, i.e. the common directory for both output and dependencies',
