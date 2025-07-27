@@ -1,0 +1,53 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:parquet], lang: ['lang/duckdb'])
+
+# Test ad-hoc mode for parquet operations
+parquet.sales = duckdb* %{
+  SELECT
+    'Product A' as product,
+    100 as quantity,
+    25.50 as price,
+    date '2024-01-15' as sale_date
+  UNION ALL
+  SELECT
+    'Product B' as product,
+    75 as quantity,
+    40.00 as price,
+    date '2024-01-16' as sale_date
+}
+
+parquet.summary = ['_out/sales.parquet'] | duckdb* %{
+  SELECT
+    product,
+    quantity * price as total_value
+  FROM read_parquet('_out/sales.parquet')
+  WHERE quantity > 50
+}
+
+# rake task
+task :default, [:ctx] => ['_out/summary.parquet'] do |t, args|
+  args.ctx.add_test do
+    # Check that parquet files were created directly
+    assert File.exist?('_out/sales.parquet')
+    assert File.exist?('_out/summary.parquet')
+
+    # Verify parquet content using DuckDB
+    require 'open3'
+
+    # Test sales.parquet
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM '_out/sales.parquet'\"")
+    assert status.success?
+    assert stdout.strip == '2'
+
+    # Test summary.parquet
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM '_out/summary.parquet'\"")
+    assert status.success?
+    assert stdout.strip == '2'
+
+    # Verify calculations
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT total_value FROM '_out/summary.parquet' WHERE product = 'Product A'\"")
+    assert status.success?
+    assert_equal stdout.strip, '2550.00'
+  end
+end

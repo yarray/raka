@@ -1,0 +1,81 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt, :parquet], lang: ['lang/duckdb'])
+
+# Test parameters in persistent mode
+txt.filtered_data = duckdb(database: '_out/params.db', params: {min_age: 18, max_age: 65})* %{
+  SELECT
+    'John' as name,
+    25 as age,
+    'Active' as status
+  UNION ALL
+  SELECT
+    'Jane' as name,
+    16 as age,
+    'Inactive' as status
+  UNION ALL
+  SELECT
+    'Bob' as name,
+    70 as age,
+    'Retired' as status
+}
+
+txt.adults_only = ['_out/filtered_data.txt'] | duckdb(database: '_out/params.db', params: {min_age: 18, max_age: 65, status_filter: 'Active'})* %{
+  SELECT name, age, status
+  FROM filtered_data
+  WHERE age >= $min_age AND age <= $max_age AND status = $status_filter
+}
+
+# Test parameters in ad-hoc mode
+parquet.products = duckdb(params: {category: 'Electronics', min_price: 100})* %{
+  SELECT
+    'Laptop' as name,
+    $category as category,
+    1200.00 as price
+  UNION ALL
+  SELECT
+    'Phone' as name,
+    $category as category,
+    800.00 as price
+  UNION ALL
+  SELECT
+    'Tablet' as name,
+    $category as category,
+    300.00 as price
+}
+
+parquet.expensive_products = ['_out/products.parquet'] | duckdb(params: {threshold: 500})* %{
+  SELECT name, category, price
+  FROM read_parquet('_out/products.parquet')
+  WHERE price >= $threshold
+}
+
+# rake task
+task :default, [:ctx] => ['_out/adults_only.txt', '_out/expensive_products.parquet'] do |t, args|
+  args.ctx.add_test do
+    # Test persistent mode with parameters
+    assert File.exist?('_out/params.db')
+    adults_content = File.read('_out/adults_only.txt')
+    assert adults_content.strip == '_out/params.db'
+
+    # Verify parameter usage in persistent mode
+    require 'open3'
+    stdout, stderr, status = Open3.capture3("duckdb _out/params.db -list -noheader -c 'SELECT COUNT(*) FROM adults_only'")
+    assert status.success?
+    assert stdout.strip == '1'  # Only John should match criteria
+
+    # Test ad-hoc mode with parameters
+    assert File.exist?('_out/products.parquet')
+    assert File.exist?('_out/expensive_products.parquet')
+
+    # Verify parameter usage in ad-hoc mode
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM read_parquet('_out/expensive_products.parquet')\"")
+    assert status.success?
+    assert stdout.strip == '2'  # Laptop and Phone should be >= $500
+
+    # Verify category parameter was used
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT DISTINCT category FROM read_parquet('_out/products.parquet')\"")
+    assert status.success?
+    assert stdout.strip == 'Electronics'
+  end
+end

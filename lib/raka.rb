@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'logger'
+require 'ostruct'
 
 require_relative './raka/compile'
 require_relative './raka/protocol'

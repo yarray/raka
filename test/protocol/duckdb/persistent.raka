@@ -1,0 +1,38 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:table, :db], lang: ['lang/duckdb'])
+
+# Test persistent mode with .db file
+table.users = duckdb(database: '_out/test.db')* <<-SQL
+  SELECT 'Alice' as name, 25 as age, 'Engineer' as role
+  UNION ALL
+  SELECT 'Bob' as name, 30 as age, 'Manager' as role
+SQL
+
+table.adults = ['_out/users.table'] | duckdb(database: '_out/test.db')* <<-SQL
+  SELECT name, age FROM users WHERE age >= 25
+SQL
+
+# rake task
+task :default, [:ctx] => ['_out/adults.table'] do |t, args|
+  args.ctx.add_test do
+    # Check that database file was created
+    assert File.exist?('_out/test.db')
+
+    # Check that placeholder files link to database
+    users_content = File.read('_out/users.table')
+    adults_content = File.read('_out/adults.table')
+    assert users_content.strip == '_out/test.db'
+    assert adults_content.strip == '_out/test.db'
+
+    # Verify data was persisted in database
+    require 'open3'
+    stdout, stderr, status = Open3.capture3("duckdb _out/test.db -list -noheader -c 'SELECT COUNT(*) FROM users'")
+    assert status.success?
+    assert stdout.strip == '2'
+
+    stdout, stderr, status = Open3.capture3("duckdb _out/test.db -list -noheader -c 'SELECT COUNT(*) FROM adults'")
+    assert status.success?
+    assert stdout.strip == '2'
+  end
+end
