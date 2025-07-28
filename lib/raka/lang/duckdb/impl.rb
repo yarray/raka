@@ -17,10 +17,12 @@ end
 # 1. Persistent mode: operations on .db file with CREATE TABLE
 # 2. Ad-hoc mode: parquet in/out using COPY operations
 class Duckdb
-  def initialize(database: nil, params: {})
+  def initialize(database: nil, params: {}, before: nil, after: nil)
     @params = params
     @database = database
     @mode = @database ? :persistent : :adhoc
+    @before = before
+    @after = after
   end
 
   def duckdb_cmd
@@ -32,26 +34,50 @@ class Duckdb
     end
   end
 
-  def build(code, _task)
-    # Replace parameter placeholders
+  def process_params(code)
+    return code if code.nil?
+    
     processed_code = code
     (@params || {}).each do |key, value|
       processed_code = processed_code.gsub("$#{key}", "'#{value}'")
     end
+    processed_code
+  end
 
+  def build(code, _task)
+    # Process parameter placeholders for all parts
+    main_sql = process_params(code)
+    before_sql = process_params(@before)
+    after_sql = process_params(@after)
+
+    # Build SQL parts as separate statements
+    sql_parts = []
+    
+    # Add before hook if present
+    sql_parts << before_sql if before_sql
+    
+    # Add main query based on mode
     case @mode
     when :persistent
-      "DROP TABLE IF EXISTS :_name_; CREATE TABLE :_name_ AS (#{processed_code});"
+      sql_parts << "DROP TABLE IF EXISTS :_name_;"
+      sql_parts << "CREATE TABLE :_name_ AS (#{main_sql});"
     when :adhoc
-      "COPY (#{processed_code}) TO ':output:' (FORMAT PARQUET);"
+      sql_parts << "COPY (#{main_sql}) TO ':output:' (FORMAT PARQUET);"
     end
+    
+    # Add after hook if present
+    sql_parts << after_sql if after_sql
+    
+    sql_parts.join("\n")
   end
 
   def run_script(env, fname, task)
     case @mode
     when :persistent
+      # Split the SQL into separate statements and execute them individually
       bash env, %(
-      #{duckdb_cmd} -c "$(cat #{fname} | sed 's|:_name_|#{task.output_stem}|g')" | tee #{fname}.log
+      # Execute the combined SQL script with proper variable replacement
+      cat #{fname} | sed 's|:_name_|#{task.output_stem}|g' | #{duckdb_cmd} | tee #{fname}.log
       echo "#{@database}" > #{task.name}
       )
     when :adhoc

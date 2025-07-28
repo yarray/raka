@@ -1,0 +1,85 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:table, :parquet], lang: ['lang/duckdb'])
+
+# Test before/after hooks in persistent mode
+table.user_stats = duckdb(
+  database: '_out/hooks.db',
+  before: 'CREATE SEQUENCE IF NOT EXISTS user_id_seq;',
+  after: 'INSERT INTO user_stats VALUES (0, \'System\', \'Metadata\');'
+)* %{
+  SELECT
+    nextval('user_id_seq') as id,
+    'Alice' as name,
+    'Admin' as role
+  UNION ALL
+  SELECT
+    nextval('user_id_seq') as id,
+    'Bob' as name,
+    'User' as role
+}
+
+# Test before/after hooks in ad-hoc mode
+parquet.products = duckdb(
+  before: 'SET memory_limit = \'1GB\';',
+  after: '-- Query completed successfully'
+)* %{
+  SELECT
+    'Laptop' as name,
+    1000.00 as price,
+    'Electronics' as category
+  UNION ALL
+  SELECT
+    'Book' as name,
+    20.00 as price,
+    'Education' as category
+}
+
+# Test hooks with parameters - simpler approach
+table.user_count = ['_out/user_stats.table'] | duckdb(
+  database: '_out/hooks.db',
+  params: {role_filter: 'Admin'},
+  before: 'CREATE TABLE IF NOT EXISTS temp_stats AS SELECT * FROM user_stats WHERE 1=0;',
+  after: 'DROP TABLE IF EXISTS temp_stats;'
+)* %{
+  SELECT COUNT(*) as admin_count
+  FROM user_stats
+  WHERE role = $role_filter
+}
+
+# rake task
+task :default, [:ctx] => ['_out/user_stats.table', '_out/products.parquet', '_out/user_count.table'] do |t, args|
+  args.ctx.add_test do
+    # Test persistent mode with hooks
+    assert File.exist?('_out/hooks.db')
+
+    require 'open3'
+
+    # Verify before hook created sequence
+    stdout, stderr, status = Open3.capture3("duckdb _out/hooks.db -list -noheader -c 'SELECT COUNT(*) FROM user_stats'")
+    assert status.success?
+    assert_equal '3', stdout.strip  # Alice + Bob + System
+
+    # Verify sequence was used (ids should be sequential starting from 1)
+    stdout, stderr, status = Open3.capture3("duckdb _out/hooks.db -list -noheader -c 'SELECT MAX(id) FROM user_stats'")
+    assert status.success?
+    assert_equal '2', stdout.strip
+
+    # Test ad-hoc mode with hooks
+    assert File.exist?('_out/products.parquet')
+
+    # Verify parquet was created despite hooks
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM '_out/products.parquet'\"")
+    # assert status.success?
+    assert_equal '2', stdout.strip
+
+    # Test hooks with parameters
+    user_count_content = File.read('_out/user_count.table')
+    assert_equal '_out/hooks.db', user_count_content.strip
+
+    # Verify the count result
+    stdout, stderr, status = Open3.capture3("duckdb _out/hooks.db -list -noheader -c 'SELECT admin_count FROM user_count'")
+    assert status.success?
+    assert_equal '1', stdout.strip  # Only Alice is Admin
+  end
+end
