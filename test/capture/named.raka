@@ -1,0 +1,20 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+txt._['hello_(?<number>\d+)_(?<word>\S+)'] = run do |task|
+    File.write(task.output, task.captures.number + ',' + task.captures.word)
+end
+
+txt.hello['hello2_(?<number>\d+)_(?<word>\S+)'] = run do |task|
+    File.write(task.output, task.captures.hello0 + ',' + task.captures.hello1)
+end
+
+
+# rake task
+task :default, [:ctx] => ['_out/hello_42_world.txt', '_out/hello2_10_cosmos.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal File.read(t.prerequisites[0]), '42,world'
+        assert_equal File.read(t.prerequisites[1]), '10,cosmos'
+    end
+end
