@@ -1,0 +1,20 @@
+require '../lib/raka'
+
+Raka.new(self, output_types: [:txt])
+
+txt._['test2'] = run do |task|
+  File.write(task.output, 'string works')
+end
+
+# Test that symbol patterns work the same as string patterns
+txt._[:test] = run do |task|
+  File.write(task.output, 'symbol works')
+end
+
+task :default, [:ctx] => ['_out/test.txt', '_out/test2.txt', '_out/test_work.txt'] do |t, args|
+    args.ctx.add_test do
+        assert_equal 'symbol works', File.read('_out/test.txt')
+        assert_equal 'string works', File.read('_out/test2.txt')
+        assert_equal 'symbol works', File.read('_out/test_work.txt')
+    end
+end

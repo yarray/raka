@@ -157,12 +157,12 @@ class Token
     symbol = @chain.pop.to_s
     # if the pattern contains child pattern like percent_(\d+), we change the capture to
     # named capture so that it can be captured later. The name is symbol with the index, like func0
-    pattern = pattern.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
+    pattern = pattern.to_s.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
 
     # if the symbol is _, \S+ will be put in chain, it indicates not to capture,
     # so just replace it with the refined pattern
     if symbol == Pattern::ANY # match-everything and not bound
-      @chain.push pattern.to_s
+      @chain.push "#{pattern}\\w*"
     else
       @chain.push "(?<#{symbol}>(#{pattern}\\w*))"
     end
