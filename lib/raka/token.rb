@@ -9,8 +9,7 @@ end
 
 # Context to preserve during the token chaining
 class Context
-  attr_reader :ext
-  attr_reader :scopes
+  attr_reader :ext, :scopes
 
   def initialize(ext, scopes = [])
     @ext = ext
@@ -53,7 +52,7 @@ class Token
     # xxx? is for minimal match
     out_pattern = %r{^((?<scope>\S+)/)?}.source
     out_pattern += %r{(?<target_scope>#{@inline_scope})/}.source unless @inline_scope.nil?
-    out_pattern += /(?<stem>(\S+))(?<ext>\.[^\.]+)$/.source
+    out_pattern += /(?<stem>(\S+))(?<ext>\.[^.]+)$/.source
     info = Regexp.new(out_pattern).match(output)
     res = Hash[info.names.zip(info.captures)]
     unless info[:scope].nil?
@@ -153,23 +152,47 @@ class Token
   end
 
   # These two methods indicate that this is a pattern token
-  def [](pattern)
+  def [](pattern, options = {})
     symbol = @chain.pop.to_s
     # if the pattern contains child pattern like percent_(\d+), we change the capture to
     # named capture so that it can be captured later. The name is symbol with the index, like func0
     pattern = pattern.to_s.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
 
+    # determine match mode: 'exact' or 'prefix' (default)
+    match_mode = options[:match_mode] || 'prefix'
+
+    # build the pattern based on match mode
+    refined_pattern = case match_mode
+                      when 'exact'
+                        pattern.to_s
+                      when 'prefix'
+                        "#{pattern}\\w*"
+                      else
+                        raise "Invalid match_mode: #{match_mode}. Use 'exact' or 'prefix'"
+                      end
+
     # if the symbol is _, \S+ will be put in chain, it indicates not to capture,
     # so just replace it with the refined pattern
     if symbol == Pattern::ANY # match-everything and not bound
-      @chain.push "#{pattern}\\w*"
+      @chain.push refined_pattern
     else
-      @chain.push "(?<#{symbol}>(#{pattern}\\w*))"
+      @chain.push "(?<#{symbol}>(#{refined_pattern}))"
     end
     self
   end
 
-  def []=(pattern, value)
-    @compiler.compile(self[pattern], value)
+  def []=(pattern, *args)
+    case args.length
+    when 1
+      # Standard: txt._[:pattern] = value
+      value = args[0]
+      @compiler.compile(self[pattern], value)
+    when 2
+      # With options: txt._[:pattern, {match_mode: 'exact'}] = value
+      options, value = args
+      @compiler.compile(self[pattern, options], value)
+    else
+      raise ArgumentError, "wrong number of arguments (given #{args.length + 1}, expected 2 or 3)"
+    end
   end
 end

@@ -1,0 +1,71 @@
+require '../lib/raka'
+
+Raka.new(self, output_types: [:txt])
+
+# Test exact matching - should only match "test.txt" exactly
+txt._[:test, {match_mode: 'exact'}] = run do |task|
+  File.write(task.output, 'exact match')
+end
+
+# Test prefix matching - should match "test_data.txt" as prefix (default)
+txt._[:test] = run do |task|
+  File.write(task.output, 'prefix match')
+end
+
+# Test string pattern with exact matching
+txt._['user', {match_mode: 'exact'}] = run do |task|
+  File.write(task.output, 'string exact')
+end
+
+# Test string pattern with prefix matching
+txt._['user', {match_mode: 'prefix'}] = run do |task|
+  File.write(task.output, 'string prefix')
+end
+
+# Test patterns in the middle of chain using []= syntax
+txt.test._[:config, {match_mode: 'exact'}] = run do |task|
+  File.write(task.output, 'middle exact')
+end
+
+txt.test._[:config, {match_mode: 'prefix'}] = run do |task|
+  File.write(task.output, 'middle prefix')
+end
+
+txt.user.summary_detail = run do |task|
+  File.write(task.output, '')
+end
+
+txt.user.summary = run do |task|
+  File.write(task.output, 'chain prefix')
+end
+
+# Test patterns in the middle using [] chaining syntax
+txt.user._[:summary, {match_mode: 'exact'}].processed = run do |task|
+  File.write(task.output, 'chain exact')
+end
+
+txt.user._[:summary].processed = run do |task|
+  File.write(task.output, 'chain prefix')
+end
+
+task :default, [:ctx] => [
+  '_out/test.txt',                    # should match exact rule
+  '_out/test_data.txt',               # should NOT match exact, should match prefix rule
+  '_out/user.txt',                    # should match string exact rule
+  '_out/user_profile.txt',            # should NOT match string exact, should match string prefix rule
+  '_out/config__test.txt',            # should match middle exact rule
+  '_out/config_local__test.txt',      # should NOT match middle exact, should match middle prefix rule
+  '_out/processed__summary__user.txt',       # should match chain exact rule
+  '_out/processed__summary_detail__user.txt' # should NOT match chain exact, should match chain prefix rule
+] do |t, args|
+  args.ctx.add_test do
+    assert_equal 'exact match', File.read('_out/test.txt')
+    assert_equal 'prefix match', File.read('_out/test_data.txt')
+    assert_equal 'string exact', File.read('_out/user.txt')
+    assert_equal 'string prefix', File.read('_out/user_profile.txt')
+    assert_equal 'middle exact', File.read('_out/config__test.txt')
+    assert_equal 'middle prefix', File.read('_out/config_local__test.txt')
+    assert_equal 'chain exact', File.read('_out/processed__summary__user.txt')
+    assert_equal 'chain prefix', File.read('_out/processed__summary_detail__user.txt')
+  end
+end
