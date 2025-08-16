@@ -4,9 +4,9 @@ require '../lib/raka'
 dsl = Raka.new(self, output_types: [:txt], lang: ['lang/python'])
 py.config libs: ['datetime']
 
-txt.test = py* %(
-    open('$@', 'w').write(datetime.datetime.min.strftime('%Y-%m-%d'))
-)
+txt.test = py* <<-PYTHON
+    open('$@', 'w').write(datetime.datetime.min.strftime('%4Y-%m-%d'))
+PYTHON
 
 # rake task
 task :default, [:ctx] => ['_out/test.txt'] do |t, args|

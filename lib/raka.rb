@@ -46,8 +46,10 @@ class Raka
       type_aliases: {},
       scopes: [],
       lang: ['lang/shell'],
-      user_lang: []
+      user_lang: [],
+      pattern_options: { match_mode: 'prefix' }
     }
+    options[:pattern_options] = defaults[:pattern_options].merge(options[:pattern_options] || {})
     @options = options = OpenStruct.new(defaults.merge(options))
 
     create_logger options.log_level || (ENV['LOG_LEVEL'] || Logger::INFO).to_i
@@ -58,7 +60,7 @@ class Raka
     end
     # specify root of scopes in options, scopes will append to each root
     @scopes = options.scopes.empty? ? [] : [options.scopes]
-    @options.lang.each { |path| load File::join(File::dirname(__FILE__), "raka/#{path}/impl.rb") }
+    @options.lang.each { |path| load File.join(File.dirname(__FILE__), "raka/#{path}/impl.rb") }
     @options.user_lang.each { |path| load path.to_s + '.rb' }
 
     # These are where the dsl starts

@@ -35,6 +35,7 @@ class Token
     @inline_scope = inline_scope
     @options = {}
     @options[:input_exts] = input_exts
+    @compiler_options = @compiler.instance_variable_get(:@options)
   end
 
   def _options_
@@ -158,11 +159,11 @@ class Token
     # named capture so that it can be captured later. The name is symbol with the index, like func0
     pattern = pattern.to_s.gsub(/\(\S+?\)/).with_index { |m, i| "(?<#{symbol}#{i}>#{m})" }
 
-    # determine match mode: 'exact' or 'prefix' (default)
-    match_mode = options[:match_mode] || 'prefix'
+    # merge global pattern defaults with provided options
+    options = @compiler_options&.pattern_options&.merge(options)
 
     # build the pattern based on match mode
-    refined_pattern = case match_mode
+    refined_pattern = case options[:match_mode]
                       when 'exact'
                         pattern.to_s
                       when 'prefix'
