@@ -5,6 +5,11 @@ require 'optparse'
 require 'English'
 require 'open3'
 
+def get_version
+  version_file = File.join(File.dirname(__FILE__), '..', 'VERSION')
+  File.read(version_file).strip
+end
+
 def detect_main
   # check predefined files
   main_file_cands = ['Rakefile.raka', 'rakefile.raka', 'main.raka']
@@ -30,6 +35,11 @@ parser = OptionParser.new do |opts|
 
   opts.on('-v', '--[no-]verbose', 'Run verbosely') do |v|
     set_option(options, :verbose, v)
+  end
+
+  opts.on('--version', 'Show version') do
+    puts get_version
+    exit(0)
   end
 
   opts.on('-f', '--file FILE', String, 'Run even when up to date') do |s|
