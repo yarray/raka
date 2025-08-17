@@ -130,6 +130,45 @@ class DSLCompiler
     end
   end
 
+  # extract typed components from rhs array and return filtered array + components
+  def extract_typed_components(rhs)
+    deps = []
+    posts = []
+    filtered_rhs = []
+    
+    rhs.each do |item|
+      if item.is_a?(Hash)
+        # Handle hash with multiple key-value pairs like [dep: dep3, post: post1]
+        item.each do |key, value|
+          case key
+          when :dep, 'dep'
+            # Handle both single values and arrays, but don't convert Token objects
+            if value.is_a?(Array)
+              deps.concat(value)
+            else
+              deps << value
+            end
+          when :post, 'post'  
+            # Handle both single values and arrays, but don't convert Token objects
+            if value.is_a?(Array)
+              posts.concat(value)
+            else
+              posts << value
+            end
+          else
+            # Unknown typed component - raise error
+            raise "Unknown typed component: #{key}. Supported components are 'dep' and 'post'"
+          end
+        end
+      else
+        # Regular item (dependency, action, or post-task)
+        filtered_rhs << item
+      end
+    end
+    
+    { deps: deps, posts: posts, filtered_rhs: filtered_rhs }
+  end
+
   # compile token = rhs to rake rule
   # rubocop:disable Style/MethodLength
   # rubocop:disable Style/PerceivedComplexity
@@ -138,33 +177,43 @@ class DSLCompiler
       raise "DSL compile error: seems not a valid @env of rake with class #{@env.class}"
     end
 
+    # Extract typed components first
+    components = extract_typed_components(rhs)
+    typed_deps = components[:deps]
+    typed_posts = components[:posts]  
+    filtered_rhs = components[:filtered_rhs]
+
     # the format is [dep, ...] | [action, ...] | [post, ...], where the posts
     # are those will be raked after the actions
-    actions_start = rhs.find_index { |item| item.respond_to?(:call) }
+    actions_start = filtered_rhs.find_index { |item| item.respond_to?(:call) }
 
     # case 1: has action
     if actions_start
-      extra_deps = rhs[0, actions_start]
-      actions_end = rhs[actions_start, rhs.length].find_index do |item|
+      extra_deps = filtered_rhs[0, actions_start]
+      actions_end = filtered_rhs[actions_start, filtered_rhs.length].find_index do |item|
         !item.respond_to?(:call)
       end
 
       # case 1.1: has post
       if actions_end
         actions_end += actions_start
-        actions = rhs[actions_start, actions_end]
-        extra_tasks = rhs[actions_end, rhs.length]
+        actions = filtered_rhs[actions_start, actions_end]
+        extra_tasks = filtered_rhs[actions_end, filtered_rhs.length]
       # case 1.2: no post
       else
-        actions = rhs[actions_start, rhs.length]
+        actions = filtered_rhs[actions_start, filtered_rhs.length]
         extra_tasks = []
       end
     # case 2: no action
     else
-      extra_deps = rhs
+      extra_deps = filtered_rhs
       actions = []
       extra_tasks = []
     end
+
+    # Merge typed components with extracted components
+    extra_deps = extra_deps + typed_deps
+    extra_tasks = extra_tasks + typed_posts
 
     unless lhs._input_?
       create_rule lhs, proc { [] }, actions, extra_deps, extra_tasks

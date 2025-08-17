@@ -1,0 +1,126 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:txt])
+
+# Test 1: Basic typed dep syntax
+txt.test1 = [dep: txt.helper1] | run do |task|
+  File.write(task.output, 'test1:' + task.deps.join(','))
+end
+
+txt.helper1 = run do |task|
+  File.write(task.output, 'helper1')
+end
+
+# Test 2: Basic typed post syntax  
+txt.test2 = run do |task|
+  File.write(task.output, 'test2')
+end | [post: txt.post1]
+
+txt.post1 = run do |task|
+  File.write(task.output.gsub('test2', 'post1'), 'executed')
+end
+
+# Test 3: Mixed regular and typed deps
+txt.test3 = [txt.helper2] | [dep: txt.helper3] | run do |task|
+  File.write(task.output, 'test3:' + task.deps.join(','))
+end
+
+txt.helper2 = run do |task|
+  File.write(task.output, 'helper2')
+end
+
+txt.helper3 = run do |task|
+  File.write(task.output, 'helper3')
+end
+
+# Test 4: Multiple typed components in one hash
+txt.test4 = [dep: txt.helper4, post: txt.post2] | run do |task|
+  File.write(task.output, 'test4:' + task.deps.join(','))
+end
+
+txt.helper4 = run do |task|
+  File.write(task.output, 'helper4')
+end
+
+txt.post2 = run do |task|
+  File.write(task.output.gsub('test4', 'post2'), 'executed')
+end
+
+# Test 5: Array values for typed components
+txt.test5 = [dep: [txt.helper5a, txt.helper5b], post: [txt.post3a, txt.post3b]] | run do |task|
+  File.write(task.output, 'test5:' + task.deps.join(','))
+end
+
+txt.helper5a = run do |task|
+  File.write(task.output, 'helper5a')
+end
+
+txt.helper5b = run do |task|
+  File.write(task.output, 'helper5b')
+end
+
+txt.post3a = run do |task|
+  File.write(task.output.gsub('test5', 'post3a'), 'executed')
+end
+
+txt.post3b = run do |task|
+  File.write(task.output.gsub('test5', 'post3b'), 'executed')
+end
+
+# Test 6: Complex mixed syntax
+txt.test6 = [txt.helper6a] | [dep: txt.helper6b] | run do |task|
+  File.write(task.output, 'test6:' + task.deps.join(','))
+end | [post: txt.post4] | [txt.regular_post]
+
+txt.helper6a = run do |task|
+  File.write(task.output, 'helper6a')
+end
+
+txt.helper6b = run do |task|
+  File.write(task.output, 'helper6b')
+end
+
+txt.post4 = run do |task|
+  File.write(task.output.gsub('test6', 'post4'), 'executed')
+end
+
+txt.regular_post = run do |task|
+  File.write(task.output.gsub('test6', 'regular_post'), 'executed')
+end
+
+# rake task
+task :default, [:ctx] => ['_out/test1.txt', '_out/test2.txt', '_out/test3.txt', '_out/test4.txt', '_out/test5.txt', '_out/test6.txt'] do |t, args|
+  args.ctx.add_test do
+    # Test 1: Basic typed dep
+    assert_equal 'test1:_out/helper1.txt', File.read('_out/test1.txt')
+    assert_equal 'helper1', File.read('_out/helper1.txt')
+    
+    # Test 2: Basic typed post
+    assert_equal 'test2', File.read('_out/test2.txt')
+    assert_equal 'executed', File.read('_out/post1.txt')
+    
+    # Test 3: Mixed deps
+    assert_equal 'test3:_out/helper2.txt,_out/helper3.txt', File.read('_out/test3.txt')
+    assert_equal 'helper2', File.read('_out/helper2.txt')
+    assert_equal 'helper3', File.read('_out/helper3.txt')
+    
+    # Test 4: Multiple typed components
+    assert_equal 'test4:_out/helper4.txt', File.read('_out/test4.txt')
+    assert_equal 'helper4', File.read('_out/helper4.txt')
+    assert_equal 'executed', File.read('_out/post2.txt')
+    
+    # Test 5: Array values
+    assert_equal 'test5:_out/helper5a.txt,_out/helper5b.txt', File.read('_out/test5.txt')
+    assert_equal 'helper5a', File.read('_out/helper5a.txt')
+    assert_equal 'helper5b', File.read('_out/helper5b.txt')
+    assert_equal 'executed', File.read('_out/post3a.txt')
+    assert_equal 'executed', File.read('_out/post3b.txt')
+    
+    # Test 6: Complex mixed syntax
+    assert_equal 'test6:_out/helper6a.txt,_out/helper6b.txt', File.read('_out/test6.txt')
+    assert_equal 'helper6a', File.read('_out/helper6a.txt')
+    assert_equal 'helper6b', File.read('_out/helper6b.txt')
+    assert_equal 'executed', File.read('_out/post4.txt')
+    assert_equal 'executed', File.read('_out/regular_post.txt')
+  end
+end
