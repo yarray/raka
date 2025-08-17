@@ -37,10 +37,10 @@ class Psql
 
     if @create.to_s == 'table'
       'DROP TABLE IF EXISTS :_schema_:_name_;' \
-        'CREATE TABLE :schema:_name_ AS (' + code + ');'
+        'CREATE TABLE :_schema_:_name_ AS (' + code + ');'
     elsif @create.to_s == 'mview'
       'DROP MATERIALIZED VIEW IF EXISTS :_schema_:_name_;' \
-        'CREATE MATERIALIZED VIEW :schema:_name_ AS (' + code + ');'
+        'CREATE MATERIALIZED VIEW :_schema_:_name_ AS (' + code + ');'
     else
       code
     end
