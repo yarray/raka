@@ -56,11 +56,11 @@ class LanguageProtocol
     code = yield @text if @text
     code = @block.call(task) if @block # do not resolve
 
-    env.logger.debug code
+    env.logger.debug code.chomp
     script_text = @impl.build(wrap_template(remove_common_indent(code)), task)
     temp_script = create_tmp(script_text)
     @impl.run_script env, temp_script, task
-    env.logger.debug script_text
+    env.logger.debug script_text.chomp
   end
 end
 
@@ -91,7 +91,7 @@ def run_cmd(env, cmd)
   if env.logger.level <= 0
     pid = spawn(cmd, out: out_w)
     Thread.new do
-      env.logger.debug(out_r.gets) until out_r.eof
+      env.logger.debug(out_r.gets.chomp) until out_r.eof
     end
   elsif env.logger.level == 1
     pid = spawn(cmd, out: out_w)

@@ -52,7 +52,7 @@ class Psql
 
     bash env, %(
     #{sh_cmd(schema)} #{param_str} -v _name_=#{task.output_stem} \
-      -v _schema_=#{schema.empty? ? '' : schema + '.'} -f #{fname} | sed -z '$ s/\n$//' | tee #{fname}.log
+      -v _schema_=#{schema.empty? ? '' : schema + '.'} -f #{fname} | sed -z '$ s/\\n$//' | tee #{fname}.log
     mv #{fname}.log #{task.name}
     )
   end

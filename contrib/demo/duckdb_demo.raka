@@ -1,0 +1,69 @@
+require '../../lib/raka'
+
+# DuckDB Demo - Test line break handling and basic usage
+dsl = Raka.new(self, output_types: [:csv, :parquet, :db, :txt], lang: ['lang/shell', 'lang/duckdb'])
+
+# Sample data creation
+csv.sample_data = shell* <<-SHELL
+  echo "creating header"
+  echo "id,name,value" > $@
+  echo "inserting data"
+  echo "1,Alice,100" >> $@
+  echo "2,Bob,200" >> $@
+  echo "3,Charlie,300" >> $@
+SHELL
+
+# Test 1: Ad-hoc mode (parquet output) - should show line break handling
+parquet.processed_data = [csv.sample_data] | duckdb* <<-SQL
+  SELECT
+    id,
+    name,
+    value * 2 as doubled_value,
+    'test output with newlines
+    and multiple lines' as notes
+  FROM read_csv('$<', AUTO_DETECT=true)
+SQL
+
+# Test 2: Persistent mode (database operations) - test with database file
+db.analytics_db = [csv.sample_data] | duckdb(database: '_out/analytics.db')* %(
+  SELECT
+    COUNT(*) as total_records,
+    AVG(value) as avg_value,
+    'Summary data' as description
+  FROM read_csv('$<', AUTO_DETECT=true)
+)
+
+# Test 3: Check log files for line break issues
+txt.log_check = [parquet.processed_data] | shell* %(
+  echo "=== Checking DuckDB log file line breaks ==="
+  if [ -f _out/processed_data.parquet.log ]; then
+    echo "Log file exists: _out/processed_data.parquet.log"
+    echo "Log file size: $(wc -c < _out/processed_data.parquet.log) bytes"
+    echo "Log file lines: $(wc -l < _out/processed_data.parquet.log) lines"
+    echo "Last character check:"
+    tail -c 5 _out/processed_data.parquet.log | od -c
+    echo "--- Log content ---"
+    cat _out/processed_data.parquet.log
+    echo "--- End log content ---"
+  else
+    echo "Log file not found!"
+  fi > $@
+)
+
+# Test 4: Verify output data
+txt.data_check = [parquet.processed_data] | shell* %(
+  echo "=== Checking output data ==="
+  if [ -f _out/processed_data.parquet ]; then
+    echo "Output file exists: _out/processed_data.parquet"
+    echo "Output file size: $(wc -c < _out/processed_data.parquet) bytes"
+  else
+    echo "Output file not found!"
+  fi > $@
+)
+
+# Default task to run all tests
+task :default => ['_out/log_check.txt', '_out/data_check.txt', '_out/analytics_db.db'] do
+  puts "DuckDB demo completed!"
+  puts "Check _out/log_check.txt for line break analysis"
+  puts "Check _out/data_check.txt for data verification"
+end

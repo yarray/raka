@@ -36,7 +36,7 @@ class Duckdb
 
   def process_params(code)
     return code if code.nil?
-    
+
     processed_code = code
     (@params || {}).each do |key, value|
       processed_code = processed_code.gsub("$#{key}", "'#{value}'")
@@ -52,22 +52,22 @@ class Duckdb
 
     # Build SQL parts as separate statements
     sql_parts = []
-    
+
     # Add before hook if present
     sql_parts << before_sql if before_sql
-    
+
     # Add main query based on mode
     case @mode
     when :persistent
-      sql_parts << "DROP TABLE IF EXISTS :_name_;"
+      sql_parts << 'DROP TABLE IF EXISTS :_name_;'
       sql_parts << "CREATE TABLE :_name_ AS (#{main_sql});"
     when :adhoc
       sql_parts << "COPY (#{main_sql}) TO ':output:' (FORMAT PARQUET);"
     end
-    
+
     # Add after hook if present
     sql_parts << after_sql if after_sql
-    
+
     sql_parts.join("\n")
   end
 
@@ -77,12 +77,12 @@ class Duckdb
       # Split the SQL into separate statements and execute them individually
       bash env, %(
       # Execute the combined SQL script with proper variable replacement
-      cat #{fname} | sed 's|:_name_|#{task.output_stem}|g' | #{duckdb_cmd} | sed -z '$ s/\n$//' | tee #{fname}.log
+      cat #{fname} | sed 's|:_name_|#{task.output_stem}|g' | #{duckdb_cmd} | sed -z '$ s/\\n$//' | tee #{fname}.log
       echo "#{@database}" > #{task.name}
       )
     when :adhoc
       bash env, %(
-      cat #{fname} | sed 's|:output:|#{task.name}|g' | #{duckdb_cmd} | sed -z '$ s/\n$//' | tee #{fname}.log
+      cat #{fname} | sed 's|:output:|#{task.name}|g' | #{duckdb_cmd} | sed -z '$ s/\\n$//' | tee #{fname}.log
       )
     end
   end
