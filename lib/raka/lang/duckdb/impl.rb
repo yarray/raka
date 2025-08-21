@@ -77,12 +77,12 @@ class Duckdb
       # Split the SQL into separate statements and execute them individually
       bash env, %(
       # Execute the combined SQL script with proper variable replacement
-      cat #{fname} | sed 's|:_name_|#{task.output_stem}|g' | #{duckdb_cmd} | { cat; echo; } | sed '$ { /^$/ d; }' | tee #{fname}.log
+      cat #{fname} | sed 's|:_name_|#{task.output_stem}|g' | #{duckdb_cmd} | sed -z '$ s/\n$//' | tee #{fname}.log
       echo "#{@database}" > #{task.name}
       )
     when :adhoc
       bash env, %(
-      cat #{fname} | sed 's|:output:|#{task.name}|g' | #{duckdb_cmd} | { cat; echo; } | sed '$ { /^$/ d; }' | tee #{fname}.log
+      cat #{fname} | sed 's|:output:|#{task.name}|g' | #{duckdb_cmd} | sed -z '$ s/\n$//' | tee #{fname}.log
       )
     end
   end
