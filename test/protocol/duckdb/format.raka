@@ -1,0 +1,67 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:json, :csv, :parquet], lang: ['lang/duckdb'])
+
+# Test different output formats
+json.data = duckdb(format: 'JSON')* %{
+  SELECT
+    'Alice' as name,
+    25 as age,
+    'Engineer' as job
+  UNION ALL
+  SELECT
+    'Bob' as name,
+    30 as age,
+    'Designer' as job
+}
+
+csv.data = duckdb(format: 'CSV')* %{
+  SELECT
+    'Charlie' as name,
+    35 as age,
+    'Manager' as job
+  UNION ALL
+  SELECT
+    'Diana' as name,
+    28 as age,
+    'Developer' as job
+}
+
+# Test default format (PARQUET)
+parquet.data = duckdb* %{
+  SELECT
+    'Eve' as name,
+    32 as age,
+    'Analyst' as job
+  UNION ALL
+  SELECT
+    'Frank' as name,
+    27 as age,
+    'Tester' as job
+}
+
+# rake task
+task :default, [:ctx] => ['_out/data.json', '_out/data.csv', '_out/data.parquet'] do |t, args|
+  args.ctx.add_test do
+    # Check that files were created
+    assert File.exist?('_out/data.json')
+    assert File.exist?('_out/data.csv')
+    assert File.exist?('_out/data.parquet')
+
+    # Verify JSON content
+    json_content = File.read('_out/data.json')
+    assert json_content.include?('Alice')
+    assert json_content.include?('Engineer')
+
+    # Verify CSV content  
+    csv_content = File.read('_out/data.csv')
+    assert csv_content.include?('Charlie')
+    assert csv_content.include?('Manager')
+
+    # Verify parquet using DuckDB
+    require 'open3'
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM '_out/data.parquet'\"")
+    assert status.success?
+    assert stdout.strip == '2'
+  end
+end

@@ -1,0 +1,80 @@
+require '../lib/raka'
+
+dsl = Raka.new(self, output_types: [:json, :csv, :parquet], lang: ['lang/duckdb'])
+
+# Test automatic format detection from file extensions
+json.users = duckdb* %{
+  SELECT
+    'Alice' as name,
+    25 as age,
+    'Engineer' as role
+  UNION ALL
+  SELECT
+    'Bob' as name,
+    30 as age,
+    'Designer' as role
+}
+
+csv.employees = duckdb* %{
+  SELECT
+    'Charlie' as name,
+    35 as age,
+    'Manager' as role
+  UNION ALL
+  SELECT
+    'Diana' as name,
+    28 as age,
+    'Developer' as role
+}
+
+parquet.teams = duckdb* %{
+  SELECT
+    'Team A' as name,
+    'Engineering' as department,
+    5 as size
+  UNION ALL
+  SELECT
+    'Team B' as name,
+    'Design' as department,
+    3 as size
+}
+
+# Test explicit format override (CSV data saved as .json extension)
+json.csv_data = duckdb(format: 'CSV')* %{
+  SELECT
+    'Eve' as name,
+    32 as age,
+    'Analyst' as role
+}
+
+# rake task
+task :default, [:ctx] => ['_out/users.json', '_out/employees.csv', '_out/teams.parquet', '_out/csv_data.json'] do |t, args|
+  args.ctx.add_test do
+    # Check that files were created
+    assert File.exist?('_out/users.json')
+    assert File.exist?('_out/employees.csv')
+    assert File.exist?('_out/teams.parquet')
+    assert File.exist?('_out/csv_data.json')
+
+    # Verify JSON format was automatically detected
+    json_content = File.read('_out/users.json')
+    assert json_content.include?('"name":"Alice"')
+    assert json_content.include?('"age":25')
+
+    # Verify CSV format was automatically detected
+    csv_content = File.read('_out/employees.csv')
+    assert csv_content.include?('Charlie,35,Manager')
+
+    # Verify explicit format override works (CSV in .json file)
+    csv_in_json = File.read('_out/csv_data.json')
+    assert csv_in_json.include?('Eve,32,Analyst')
+    # Should not be JSON format
+    assert !csv_in_json.include?('"name"')
+
+    # Verify parquet using DuckDB
+    require 'open3'
+    stdout, stderr, status = Open3.capture3("duckdb -list -noheader -c \"SELECT COUNT(*) FROM '_out/teams.parquet'\"")
+    assert status.success?
+    assert stdout.strip == '2'
+  end
+end

@@ -17,12 +17,13 @@ end
 # 1. Persistent mode: operations on .db file with CREATE TABLE
 # 2. Ad-hoc mode: parquet in/out using COPY operations
 class Duckdb
-  def initialize(database: nil, params: {}, before: nil, after: nil)
+  def initialize(database: nil, params: {}, before: nil, after: nil, format: nil)
     @params = params
     @database = database
     @mode = @database ? :persistent : :adhoc
     @before = before
     @after = after
+    @format = format&.upcase
   end
 
   def duckdb_cmd
@@ -44,7 +45,12 @@ class Duckdb
     processed_code
   end
 
-  def build(code, _task)
+  def detect_format_from_extension(filename)
+    ext = File.extname(filename)[1..]&.upcase  # Remove dot and convert to uppercase
+    ext || 'PARQUET'  # Default fallback
+  end
+
+  def build(code, task)
     # Process parameter placeholders for all parts
     main_sql = process_params(code)
     before_sql = process_params(@before)
@@ -62,7 +68,9 @@ class Duckdb
       sql_parts << 'DROP TABLE IF EXISTS :_name_;'
       sql_parts << "CREATE TABLE :_name_ AS (#{main_sql});"
     when :adhoc
-      sql_parts << "COPY (#{main_sql}) TO ':output:' (FORMAT PARQUET);"
+      # Determine format: use explicit format if provided, otherwise detect from output filename
+      format = @format || detect_format_from_extension(task.name)
+      sql_parts << "COPY (#{main_sql}) TO ':output:' (FORMAT #{format});"
     end
 
     # Add after hook if present
